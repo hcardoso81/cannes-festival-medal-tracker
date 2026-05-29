@@ -43,8 +43,8 @@ final class Shortcodes
         <table class="fmb-table fmb-table-country-total">
             <thead>
                 <tr>
-                    <th scope="col"><?php echo esc_html__('Country', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Total medals', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Total de medallas', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -71,7 +71,7 @@ final class Shortcodes
         <table class="fmb-table fmb-table-medal-total">
             <thead>
                 <tr>
-                    <th scope="col"><?php echo esc_html__('Medal type', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Tipo de medalla', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -81,15 +81,15 @@ final class Shortcodes
                     <td><?php echo esc_html((string) absint($totals['gp'])); ?></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Gold', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
                     <td><?php echo esc_html((string) absint($totals['gold'])); ?></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Silver', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
                     <td><?php echo esc_html((string) absint($totals['silver'])); ?></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Bronze', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="row"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
                     <td><?php echo esc_html((string) absint($totals['bronze'])); ?></td>
                 </tr>
             </tbody>
@@ -113,11 +113,11 @@ final class Shortcodes
         <table class="fmb-table fmb-table-country-detail">
             <thead>
                 <tr>
-                    <th scope="col"><?php echo esc_html__('Country', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Gold', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Silver', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Bronze', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -151,6 +151,6 @@ final class Shortcodes
 
     private function emptyMessage(): string
     {
-        return '<p class="fmb-empty">' . esc_html__('No medals have been imported yet.', 'cannes-festival-medal-tracker') . '</p>';
+        return '<p class="fmb-empty">' . esc_html__('Todavia no se importaron medallas.', 'cannes-festival-medal-tracker') . '</p>';
     }
 }

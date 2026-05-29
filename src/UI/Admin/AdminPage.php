@@ -54,8 +54,8 @@ final class AdminPage
     public function registerMenu(): void
     {
         add_menu_page(
-            __('Festival Medal Tracker', 'cannes-festival-medal-tracker'),
-            __('Medal Tracker', 'cannes-festival-medal-tracker'),
+            __('Medallero del Festival', 'cannes-festival-medal-tracker'),
+            __('Medallero', 'cannes-festival-medal-tracker'),
             'manage_options',
             self::MENU_SLUG,
             [$this, 'renderPage'],
@@ -81,7 +81,7 @@ final class AdminPage
     public function handleImport(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You are not allowed to import medals.', 'cannes-festival-medal-tracker'));
+            wp_die(esc_html__('No tienes permisos para importar medallas.', 'cannes-festival-medal-tracker'));
         }
 
         check_admin_referer(self::NONCE_ACTION, self::NONCE_FIELD);
@@ -90,10 +90,14 @@ final class AdminPage
         $error   = '';
 
         $filePath = '';
+        $fileName = '';
 
         try {
-            $filePath = $this->handleUpload();
+            $upload   = $this->handleUpload();
+            $filePath = $upload['path'];
+            $fileName = $upload['name'];
             $summary  = $this->importer->preview($filePath);
+            $summary['source_file'] = $fileName;
             $this->logIgnoredRows($summary);
             set_transient($this->previewTransientKey(), $summary, HOUR_IN_SECONDS);
         } catch (RuntimeException $runtimeException) {
@@ -112,7 +116,7 @@ final class AdminPage
                     'user_id' => get_current_user_id(),
                 ]
             );
-            $error = __('The import could not be completed. Please verify the file format and try again.', 'cannes-festival-medal-tracker');
+            $error = __('No se pudo completar la importacion. Verifica el formato del archivo e intenta nuevamente.', 'cannes-festival-medal-tracker');
         } finally {
             if ('' !== $filePath && file_exists($filePath)) {
                 wp_delete_file($filePath);
@@ -135,7 +139,7 @@ final class AdminPage
     public function handleApprovePreview(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You are not allowed to approve imports.', 'cannes-festival-medal-tracker'));
+            wp_die(esc_html__('No tienes permisos para aprobar importaciones.', 'cannes-festival-medal-tracker'));
         }
 
         check_admin_referer(self::APPROVE_NONCE_ACTION, self::APPROVE_NONCE_FIELD);
@@ -145,7 +149,7 @@ final class AdminPage
         $error   = '';
 
         if (!is_array($preview) || empty($preview['preview'])) {
-            $error = __('There is no pending import preview to approve.', 'cannes-festival-medal-tracker');
+            $error = __('No hay una vista previa de importacion pendiente para aprobar.', 'cannes-festival-medal-tracker');
         } else {
             try {
                 $summary = $this->importer->commitPreview($preview);
@@ -169,7 +173,7 @@ final class AdminPage
                         'action'  => self::APPROVE_ACTION,
                     ]
                 );
-                $error = __('The approved import could not be persisted. Please review the log.', 'cannes-festival-medal-tracker');
+                $error = __('No se pudo guardar la importacion aprobada. Revisa el log.', 'cannes-festival-medal-tracker');
             }
         }
 
@@ -189,7 +193,7 @@ final class AdminPage
     public function handleReset(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You are not allowed to reset medals.', 'cannes-festival-medal-tracker'));
+            wp_die(esc_html__('No tienes permisos para reiniciar el medallero.', 'cannes-festival-medal-tracker'));
         }
 
         check_admin_referer(self::RESET_NONCE_ACTION, self::RESET_NONCE_FIELD);
@@ -224,7 +228,7 @@ final class AdminPage
     public function renderPage(): void
     {
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You are not allowed to access this page.', 'cannes-festival-medal-tracker'));
+            wp_die(esc_html__('No tienes permisos para acceder a esta pagina.', 'cannes-festival-medal-tracker'));
         }
 
         $notice = get_transient(self::TRANSIENT_PREFIX . get_current_user_id());
@@ -233,7 +237,7 @@ final class AdminPage
         $rows = $this->repository->getCountryDetails();
         ?>
         <div class="wrap fmb-admin-page">
-            <h1><?php echo esc_html__('Festival Medal Tracker', 'cannes-festival-medal-tracker'); ?></h1>
+            <h1><?php echo esc_html__('Medallero del Festival', 'cannes-festival-medal-tracker'); ?></h1>
 
             <?php $this->renderNotice(is_array($notice) ? $notice : []); ?>
 
@@ -247,24 +251,24 @@ final class AdminPage
                     <tbody>
                         <tr>
                             <th scope="row">
-                                <label for="fmb_medal_file"><?php echo esc_html__('Excel file', 'cannes-festival-medal-tracker'); ?></label>
+                                <label for="fmb_medal_file"><?php echo esc_html__('Archivo Excel', 'cannes-festival-medal-tracker'); ?></label>
                             </th>
                             <td>
                                 <input type="file" id="fmb_medal_file" name="fmb_medal_file" accept=".xlsx,.xls,.csv" required>
                                 <p class="description">
-                                    <?php echo esc_html__('Expected columns: location and prize.', 'cannes-festival-medal-tracker'); ?>
+                                    <?php echo esc_html__('Columnas esperadas: location y prize.', 'cannes-festival-medal-tracker'); ?>
                                 </p>
                             </td>
                         </tr>
                     </tbody>
                 </table>
 
-                <?php submit_button(__('Import medals', 'cannes-festival-medal-tracker')); ?>
+                <?php submit_button(__('Generar vista previa', 'cannes-festival-medal-tracker')); ?>
             </form>
 
             <?php $this->renderPendingPreview(is_array($preview) ? $preview : []); ?>
 
-            <h2><?php echo esc_html__('Shortcode previews', 'cannes-festival-medal-tracker'); ?></h2>
+            <h2><?php echo esc_html__('Vista previa de shortcodes', 'cannes-festival-medal-tracker'); ?></h2>
             <div class="fmb-shortcode-previews">
                 <h3><?php echo esc_html('[medalByCountry]'); ?></h3>
                 <?php echo do_shortcode('[medalByCountry]'); ?>
@@ -276,20 +280,20 @@ final class AdminPage
                 <?php echo do_shortcode('[medalByCountryDetail]'); ?>
             </div>
 
-            <h2><?php echo esc_html__('Current standings', 'cannes-festival-medal-tracker'); ?></h2>
+            <h2><?php echo esc_html__('Medallero actual', 'cannes-festival-medal-tracker'); ?></h2>
             <?php $this->renderCurrentTable($rows); ?>
 
             <div class="fmb-danger-zone">
-                <h2><?php echo esc_html__('Reset medal standings', 'cannes-festival-medal-tracker'); ?></h2>
-                <p><?php echo esc_html__('This removes all medal rows from the plugin table. This action cannot be undone.', 'cannes-festival-medal-tracker'); ?></p>
+                <h2><?php echo esc_html__('Reiniciar medallero', 'cannes-festival-medal-tracker'); ?></h2>
+                <p><?php echo esc_html__('Esto elimina todas las filas de medallas de la tabla del plugin. Esta accion no se puede deshacer.', 'cannes-festival-medal-tracker'); ?></p>
                 <form
                     method="post"
                     action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
-                    onsubmit="return confirm('<?php echo esc_js(__('Are you sure you want to reset the medal standings?', 'cannes-festival-medal-tracker')); ?>');"
+                    onsubmit="return confirm('<?php echo esc_js(__('Estas seguro de que quieres reiniciar el medallero?', 'cannes-festival-medal-tracker')); ?>');"
                 >
                     <input type="hidden" name="action" value="<?php echo esc_attr(self::RESET_ACTION); ?>">
                     <?php wp_nonce_field(self::RESET_NONCE_ACTION, self::RESET_NONCE_FIELD); ?>
-                    <?php submit_button(__('Reset medal standings', 'cannes-festival-medal-tracker'), 'delete', 'submit', false); ?>
+                    <?php submit_button(__('Reiniciar medallero', 'cannes-festival-medal-tracker'), 'delete', 'submit', false); ?>
                 </form>
             </div>
         </div>
@@ -302,10 +306,10 @@ final class AdminPage
         $synonyms  = $this->importer->getPrizeSynonyms();
         ?>
         <div class="fmb-counting-rules">
-            <h2><?php echo esc_html__('Counting rules', 'cannes-festival-medal-tracker'); ?></h2>
+            <h2><?php echo esc_html__('Reglas de contabilizacion', 'cannes-festival-medal-tracker'); ?></h2>
             <div class="fmb-rules-grid">
                 <div>
-                    <h3><?php echo esc_html__('Countries counted', 'cannes-festival-medal-tracker'); ?></h3>
+                    <h3><?php echo esc_html__('Paises contabilizados', 'cannes-festival-medal-tracker'); ?></h3>
                     <ul class="fmb-chip-list">
                         <?php foreach ($countries as $country) : ?>
                             <li><?php echo esc_html((string) $country); ?></li>
@@ -313,12 +317,12 @@ final class AdminPage
                     </ul>
                 </div>
                 <div>
-                    <h3><?php echo esc_html__('Prize values counted', 'cannes-festival-medal-tracker'); ?></h3>
+                    <h3><?php echo esc_html__('Valores de prize contabilizados', 'cannes-festival-medal-tracker'); ?></h3>
                     <table class="widefat striped fmb-rules-table">
                         <thead>
                             <tr>
-                                <th scope="col"><?php echo esc_html__('Medal', 'cannes-festival-medal-tracker'); ?></th>
-                                <th scope="col"><?php echo esc_html__('Accepted prize values', 'cannes-festival-medal-tracker'); ?></th>
+                                <th scope="col"><?php echo esc_html__('Medalla', 'cannes-festival-medal-tracker'); ?></th>
+                                <th scope="col"><?php echo esc_html__('Valores de prize aceptados (el sistema convierte todo a minuscula antes de procesar; no importa si en el Excel vienen en mayusculas o capitalizados)', 'cannes-festival-medal-tracker'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -336,16 +340,16 @@ final class AdminPage
         <?php
     }
 
-    private function handleUpload(): string
+    private function handleUpload(): array
     {
         if (empty($_FILES['fmb_medal_file']) || !is_array($_FILES['fmb_medal_file'])) {
-            throw new RuntimeException(__('No file was uploaded.', 'cannes-festival-medal-tracker'));
+            throw new RuntimeException(__('No se subio ningun archivo.', 'cannes-festival-medal-tracker'));
         }
 
         $file = $_FILES['fmb_medal_file'];
 
         if (!isset($file['error']) || UPLOAD_ERR_OK !== (int) $file['error']) {
-            throw new RuntimeException(__('The file upload failed.', 'cannes-festival-medal-tracker'));
+            throw new RuntimeException(__('La carga del archivo fallo.', 'cannes-festival-medal-tracker'));
         }
 
         $allowedMimes = [
@@ -361,7 +365,7 @@ final class AdminPage
         );
 
         if (empty($fileType['ext']) || !isset($allowedMimes[$fileType['ext']])) {
-            throw new RuntimeException(__('Only XLSX, XLS or CSV files are allowed.', 'cannes-festival-medal-tracker'));
+            throw new RuntimeException(__('Solo se permiten archivos XLSX, XLS o CSV.', 'cannes-festival-medal-tracker'));
         }
 
         require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -378,7 +382,10 @@ final class AdminPage
             throw new RuntimeException(sanitize_text_field((string) $uploaded['error']));
         }
 
-        return (string) $uploaded['file'];
+        return [
+            'path' => (string) $uploaded['file'],
+            'name' => sanitize_file_name((string) $file['name']),
+        ];
     }
 
     private function renderNotice(array $notice): void
@@ -410,7 +417,7 @@ final class AdminPage
                     echo esc_html(
                         sprintf(
                             /* translators: %d: deleted database rows. */
-                            __('Medal standings reset complete. Deleted rows: %d.', 'cannes-festival-medal-tracker'),
+                            __('Reinicio del medallero completado. Filas eliminadas: %d.', 'cannes-festival-medal-tracker'),
                             (int) ($summary['deleted_rows'] ?? 0)
                         )
                     );
@@ -429,7 +436,7 @@ final class AdminPage
                     echo esc_html(
                         sprintf(
                             /* translators: 1: valid rows, 2: ignored rows, 3: created countries, 4: updated countries. */
-                            __('Import approved and persisted. Valid rows: %1$d. Ignored rows: %2$d. Countries created: %3$d. Countries updated: %4$d.', 'cannes-festival-medal-tracker'),
+                            __('Importacion aprobada y guardada. Filas validas: %1$d. Filas ignoradas: %2$d. Paises creados: %3$d. Paises actualizados: %4$d.', 'cannes-festival-medal-tracker'),
                             (int) $summary['valid_rows'],
                             (int) $summary['ignored_rows'],
                             (int) ($summary['countries_created'] ?? 0),
@@ -440,7 +447,7 @@ final class AdminPage
                     echo esc_html(
                         sprintf(
                             /* translators: 1: valid rows, 2: ignored rows. */
-                            __('Import preview ready. Valid rows: %1$d. Ignored rows: %2$d. Review the preview below, then approve to persist the data.', 'cannes-festival-medal-tracker'),
+                            __('Vista previa de importacion lista. Filas validas: %1$d. Filas ignoradas: %2$d. Revisa la vista previa y luego aprueba para guardar los datos.', 'cannes-festival-medal-tracker'),
                             (int) $summary['valid_rows'],
                             (int) $summary['ignored_rows']
                         )
@@ -459,7 +466,7 @@ final class AdminPage
                     echo esc_html(
                         sprintf(
                             /* translators: %s: plugin log path. */
-                            __('Full ignored-row details were also written to %s.', 'cannes-festival-medal-tracker'),
+                            __('El detalle completo de filas ignoradas tambien se escribio en %s.', 'cannes-festival-medal-tracker'),
                             'logs/fmb-error.log'
                         )
                     );
@@ -478,13 +485,19 @@ final class AdminPage
 
         ?>
         <div class="fmb-import-preview">
-            <h2><?php echo esc_html__('Pending import preview', 'cannes-festival-medal-tracker'); ?></h2>
+            <h2><?php echo esc_html__('Vista previa pendiente de importacion', 'cannes-festival-medal-tracker'); ?></h2>
+            <?php if (!empty($preview['source_file'])) : ?>
+                <p>
+                    <strong><?php echo esc_html__('Archivo procesado:', 'cannes-festival-medal-tracker'); ?></strong>
+                    <?php echo esc_html((string) $preview['source_file']); ?>
+                </p>
+            <?php endif; ?>
             <p>
                 <?php
                 echo esc_html(
                     sprintf(
                         /* translators: 1: valid rows, 2: ignored rows. */
-                        __('This preview found %1$d valid rows and %2$d ignored rows. Nothing has been saved yet.', 'cannes-festival-medal-tracker'),
+                        __('Esta vista previa encontro %1$d filas validas y %2$d filas ignoradas. Todavia no se guardo nada.', 'cannes-festival-medal-tracker'),
                         (int) ($preview['valid_rows'] ?? 0),
                         (int) ($preview['ignored_rows'] ?? 0)
                     )
@@ -494,13 +507,13 @@ final class AdminPage
             <table class="widefat striped fmb-admin-standings">
                 <thead>
                     <tr>
-                        <th scope="col"><?php echo esc_html__('Country', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
                         <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Gold', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Silver', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Bronze', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
                         <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Database action', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Accion en base de datos', 'cannes-festival-medal-tracker'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -510,8 +523,8 @@ final class AdminPage
                         $medals  = is_array($item['medals'] ?? null) ? $item['medals'] : [];
                         $total   = absint($medals['gp'] ?? 0) + absint($medals['gold'] ?? 0) + absint($medals['silver'] ?? 0) + absint($medals['bronze'] ?? 0);
                         $action  = null === $this->repository->findByCountry($country)
-                            ? __('Create', 'cannes-festival-medal-tracker')
-                            : __('Update', 'cannes-festival-medal-tracker');
+                            ? __('Crear', 'cannes-festival-medal-tracker')
+                            : __('Actualizar', 'cannes-festival-medal-tracker');
                         ?>
                         <tr>
                             <td><?php echo esc_html($country); ?></td>
@@ -529,11 +542,11 @@ final class AdminPage
                 class="fmb-approve-preview-form"
                 method="post"
                 action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
-                onsubmit="return confirm('<?php echo esc_js(__('Approve and continue? This will merge the preview with the persisted medal standings.', 'cannes-festival-medal-tracker')); ?>');"
+                onsubmit="return confirm('<?php echo esc_js(__('Aprobar y continuar? Esto va a combinar la vista previa con el medallero guardado.', 'cannes-festival-medal-tracker')); ?>');"
             >
                 <input type="hidden" name="action" value="<?php echo esc_attr(self::APPROVE_ACTION); ?>">
                 <?php wp_nonce_field(self::APPROVE_NONCE_ACTION, self::APPROVE_NONCE_FIELD); ?>
-                <?php submit_button(__('Approve and continue', 'cannes-festival-medal-tracker'), 'primary', 'submit', false); ?>
+                <?php submit_button(__('Aprobar y continuar', 'cannes-festival-medal-tracker'), 'primary', 'submit', false); ?>
             </form>
         </div>
         <?php
@@ -542,18 +555,18 @@ final class AdminPage
     private function renderCurrentTable(array $rows): void
     {
         if (empty($rows)) {
-            echo '<p>' . esc_html__('No medals have been imported yet.', 'cannes-festival-medal-tracker') . '</p>';
+            echo '<p>' . esc_html__('Todavia no se importaron medallas.', 'cannes-festival-medal-tracker') . '</p>';
             return;
         }
         ?>
         <table class="widefat striped fmb-admin-standings">
             <thead>
                 <tr>
-                    <th scope="col"><?php echo esc_html__('Country', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Gold', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Silver', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Bronze', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -600,9 +613,9 @@ final class AdminPage
     {
         $labels = [
             'gp'     => __('GP', 'cannes-festival-medal-tracker'),
-            'gold'   => __('Gold', 'cannes-festival-medal-tracker'),
-            'silver' => __('Silver', 'cannes-festival-medal-tracker'),
-            'bronze' => __('Bronze', 'cannes-festival-medal-tracker'),
+            'gold'   => __('Oro', 'cannes-festival-medal-tracker'),
+            'silver' => __('Plata', 'cannes-festival-medal-tracker'),
+            'bronze' => __('Bronce', 'cannes-festival-medal-tracker'),
         ];
 
         return (string) ($labels[$medal] ?? $medal);
