@@ -15,3 +15,12 @@
 .fmb-admin-standings td {
     vertical-align: middle;
 }
+
+.fmb-shortcode-previews {
+    max-width: 980px;
+    margin: 1rem 0 2rem;
+}
+
+.fmb-shortcode-previews h3 {
+    margin: 1.5rem 0 0.5rem;
+}

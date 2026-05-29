@@ -537,7 +537,10 @@ Reglas:
 
 Si el plugin usa logs:
 
-- Guardarlos en `logs/`.
+- Guardarlos dentro del plugin en `logs/` para poder consultar errores especificos del plugin sin depender solamente del log global de PHP o WordPress.
+- Crear un logger propio o adaptador simple para centralizar escrituras.
+- Registrar errores relevantes de imports, uploads, integraciones y procesos administrativos.
+- No mostrar stack traces, rutas absolutas ni detalles internos al usuario final; esos detalles deben ir al log.
 - No commitear `.log`.
 - Proteger la carpeta con `index.php` y, si el hosting lo permite, `.htaccess` o reglas equivalentes.
 - Evitar exponer logs por URL publica.
@@ -624,6 +627,7 @@ Priorizar tests en:
 
 Actualizar `README.md` cuando cambie:
 
+- Chips tecnologicos al inicio del documento con todas las tecnologias, APIs, librerias, formatos e integraciones usadas por el plugin.
 - Instalacion.
 - Configuracion.
 - Shortcodes.
@@ -636,6 +640,18 @@ Actualizar `README.md` cuando cambie:
 - Uso de ACF.
 - Acciones AJAX/admin-post.
 - Migraciones o tablas.
+
+Cada README de plugin nuevo debe incluir una seccion temprana llamada `Technology Chips` o `Chips tecnologicos`.
+
+Formato recomendado:
+
+```md
+## Technology Chips
+
+`WordPress` `PHP 8.1+` `OOP` `Namespaces` `Composer` `Shortcodes` `Custom Tables`
+```
+
+Los chips deben mantenerse actualizados cuando se agreguen o retiren tecnologias, dependencias, integraciones, formatos de archivo o APIs relevantes.
 
 ## AGENTS.md
 

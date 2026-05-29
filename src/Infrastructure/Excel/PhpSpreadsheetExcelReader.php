@@ -13,6 +13,9 @@ if (!defined('ABSPATH')) {
 
 final class PhpSpreadsheetExcelReader
 {
+    private const REQUIRED_COLUMNS = ['location', 'prize'];
+    private const HEADER_SCAN_LIMIT = 20;
+
     public function readRows(string $filePath): array
     {
         if (!class_exists(IOFactory::class)) {
@@ -33,12 +36,14 @@ final class PhpSpreadsheetExcelReader
             return [];
         }
 
-        $headerRow = array_shift($rows);
-        $headers   = $this->normalizeHeaders($headerRow);
+        $headerData = $this->findHeaderRow($rows);
 
-        if (!isset($headers['location'], $headers['prize'])) {
+        if (null === $headerData) {
             throw new RuntimeException(__('The file must contain location and prize columns.', 'cannes-festival-medal-tracker'));
         }
+
+        $headers = $headerData['headers'];
+        $rows    = array_slice($rows, $headerData['index'] + 1);
 
         $normalizedRows = [];
 
@@ -57,7 +62,7 @@ final class PhpSpreadsheetExcelReader
         $headers = [];
 
         foreach ($headerRow as $column => $value) {
-            $key = strtolower(trim((string) $value));
+            $key = $this->normalizeHeaderKey((string) $value);
 
             if ('' !== $key) {
                 $headers[$key] = $column;
@@ -65,5 +70,45 @@ final class PhpSpreadsheetExcelReader
         }
 
         return $headers;
+    }
+
+    private function findHeaderRow(array $rows): ?array
+    {
+        foreach ($rows as $index => $row) {
+            if ($index >= self::HEADER_SCAN_LIMIT) {
+                break;
+            }
+
+            $headers = $this->normalizeHeaders($row);
+
+            if ($this->hasRequiredHeaders($headers)) {
+                return [
+                    'index'   => $index,
+                    'headers' => $headers,
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    private function hasRequiredHeaders(array $headers): bool
+    {
+        foreach (self::REQUIRED_COLUMNS as $column) {
+            if (!isset($headers[$column])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function normalizeHeaderKey(string $header): string
+    {
+        $header = preg_replace('/^\xEF\xBB\xBF/', '', $header) ?: $header;
+        $header = strtolower(trim($header));
+        $header = preg_replace('/\s+/', ' ', $header) ?: '';
+
+        return sanitize_key(str_replace(' ', '_', $header));
     }
 }

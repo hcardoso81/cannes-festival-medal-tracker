@@ -12,6 +12,8 @@ Context for AI agents and developers working on this WordPress plugin.
 - Objective: import Excel festival results, aggregate medals by country, persist totals in a custom table and render standings through shortcodes.
 - Database table: `{prefix}_fmb_country_medals`.
 - Dependency: `phpoffice/phpspreadsheet` through Composer.
+- Error log: `logs/fmb-error.log`.
+- README technology chips: WordPress, PHP 7.4+, OOP, Namespaces, Plugin API, Shortcodes, Admin Pages, Custom Database Tables, wpdb, dbDelta, Composer, PhpSpreadsheet, Excel Import, HTML, CSS.
 
 ## Architecture
 
@@ -39,7 +41,7 @@ Imports are handled through `admin-post.php` with action `fmb_import_medals`. Th
 3. Validate uploaded file extension and MIME type.
 4. Store the upload through `wp_handle_upload`.
 5. Read rows with PhpSpreadsheet.
-6. Normalize `location` and `prize`.
+6. Find and normalize the `location` and `prize` headers case-insensitively.
 7. Accumulate medals by country.
 8. Upsert totals into `{prefix}_fmb_country_medals`.
 9. Delete the temporary uploaded file.
@@ -57,6 +59,31 @@ Register both requested camel-case names and lowercase aliases:
 - `medalbycountrydetail`
 
 All shortcode output must be escaped and should use semantic tables with `fmb-` CSS classes.
+Medal ordering is GP, Gold, Silver and Bronze.
+
+## Prize Synonyms
+
+Prize normalization lives in `FestivalMedalTracker\Domain\Service\MedalNormalizer`.
+
+Default mappings:
+
+- `GP`, `Grand Prix`, `Grand Prix Campaign` => `gp`
+- `Gold`, `Gold Lion` => `gold`
+- `Silver`, `Silver Lion` => `silver`
+- `Bronze`, `Bronze Lion` => `bronze`
+
+Extend synonyms with the `fmb_prize_synonyms` filter instead of editing import logic directly.
+
+## Logging
+
+Plugin-specific errors must be written to `logs/fmb-error.log` through `FestivalMedalTracker\Infrastructure\Logging\FileLogger`.
+
+Rules:
+
+- Log import failures with enough context to debug locally.
+- Do not expose stack traces or absolute paths in admin notices.
+- Keep `logs/index.php` and `logs/.htaccess` in place.
+- Do not commit `.log` files.
 
 ## Security Rules
 

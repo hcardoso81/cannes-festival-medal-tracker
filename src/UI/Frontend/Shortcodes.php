@@ -77,6 +77,10 @@ final class Shortcodes
             </thead>
             <tbody>
                 <tr>
+                    <th scope="row"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
+                    <td><?php echo esc_html((string) absint($totals['gp'])); ?></td>
+                </tr>
+                <tr>
                     <th scope="row"><?php echo esc_html__('Gold', 'cannes-festival-medal-tracker'); ?></th>
                     <td><?php echo esc_html((string) absint($totals['gold'])); ?></td>
                 </tr>
@@ -110,6 +114,7 @@ final class Shortcodes
             <thead>
                 <tr>
                     <th scope="col"><?php echo esc_html__('Country', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Gold', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Silver', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Bronze', 'cannes-festival-medal-tracker'); ?></th>
@@ -120,6 +125,7 @@ final class Shortcodes
                 <?php foreach ($rows as $row) : ?>
                     <tr>
                         <th scope="row"><?php echo esc_html((string) $row['country']); ?></th>
+                        <td><?php echo esc_html((string) absint($row['gp'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['gold'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['silver'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['bronze'])); ?></td>

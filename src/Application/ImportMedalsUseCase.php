@@ -60,7 +60,7 @@ final class ImportMedalsUseCase
             }
 
             if (!isset($accumulator[$country])) {
-                $accumulator[$country] = ['gold' => 0, 'silver' => 0, 'bronze' => 0];
+                $accumulator[$country] = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0];
             }
 
             $accumulator[$country][$medal]++;
@@ -70,6 +70,7 @@ final class ImportMedalsUseCase
         foreach ($accumulator as $country => $medals) {
             $result = $this->repository->upsertAndIncrement(
                 $country,
+                (int) $medals['gp'],
                 (int) $medals['gold'],
                 (int) $medals['silver'],
                 (int) $medals['bronze']

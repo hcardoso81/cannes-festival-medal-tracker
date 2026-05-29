@@ -10,6 +10,13 @@ if (!defined('ABSPATH')) {
 
 final class MedalNormalizer
 {
+    private const DEFAULT_PRIZE_SYNONYMS = [
+        'gp'     => ['gp', 'grand prix', 'grand prix campaign'],
+        'gold'   => ['gold lion', 'gold'],
+        'silver' => ['silver lion', 'silver'],
+        'bronze' => ['bronze lion', 'bronze'],
+    ];
+
     public function normalizeCountry(string $country): string
     {
         $country = sanitize_text_field(wp_unslash($country));
@@ -26,20 +33,42 @@ final class MedalNormalizer
 
     public function normalizePrize(string $prize): ?string
     {
-        $prize = strtolower(trim(sanitize_text_field(wp_unslash($prize))));
+        $prize = $this->normalizePrizeValue($prize);
 
-        if (in_array($prize, ['grand prix', 'gold lion'], true)) {
-            return 'gold';
-        }
-
-        if ('silver lion' === $prize) {
-            return 'silver';
-        }
-
-        if ('bronze lion' === $prize) {
-            return 'bronze';
+        foreach ($this->getPrizeSynonyms() as $medalType => $synonyms) {
+            foreach ($synonyms as $synonym) {
+                if ($prize === $this->normalizePrizeValue((string) $synonym)) {
+                    return $medalType;
+                }
+            }
         }
 
         return null;
+    }
+
+    public function getPrizeSynonyms(): array
+    {
+        $synonyms = self::DEFAULT_PRIZE_SYNONYMS;
+
+        /**
+         * Allows projects to extend accepted prize labels.
+         *
+         * Expected shape:
+         * [
+         *     'gp' => ['GP', 'Grand Prix Campaign'],
+         *     'gold' => ['Gold Lion'],
+         * ]
+         */
+        $filtered = apply_filters('fmb_prize_synonyms', $synonyms);
+
+        return is_array($filtered) ? $filtered : $synonyms;
+    }
+
+    private function normalizePrizeValue(string $prize): string
+    {
+        $prize = sanitize_text_field(wp_unslash($prize));
+        $prize = strtolower(trim($prize));
+
+        return preg_replace('/\s+/', ' ', $prize) ?: '';
     }
 }

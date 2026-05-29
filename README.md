@@ -2,6 +2,10 @@
 
 WordPress plugin to import, manage and display festival medal standings by country using gold, silver and bronze medals.
 
+## Technology Chips
+
+`WordPress` `PHP 7.4+` `OOP` `Namespaces` `Plugin API` `Shortcodes` `Admin Pages` `Custom Database Tables` `wpdb` `dbDelta` `Composer` `PhpSpreadsheet` `Excel Import` `HTML` `CSS`
+
 ## Requirements
 
 - WordPress.
@@ -32,12 +36,24 @@ The first row must contain at least these columns:
 
 Supported `prize` values:
 
-- `Grand Prix` maps to gold.
+- `GP`, `Grand Prix` and `Grand Prix Campaign` map to GP.
 - `Gold Lion` maps to gold.
 - `Silver Lion` maps to silver.
 - `Bronze Lion` maps to bronze.
 
 Rows with empty countries or unrecognized prizes are ignored and reported in the import summary.
+The header row can use different casing, such as `Location` and `Prize`, and may appear after an initial title row.
+
+Prize synonyms can be extended with the `fmb_prize_synonyms` filter:
+
+```php
+add_filter('fmb_prize_synonyms', static function (array $synonyms): array {
+    $synonyms['gp'][] = 'Grand Prix For Good';
+    $synonyms['gold'][] = 'Gold';
+
+    return $synonyms;
+});
+```
 
 ## Admin Usage
 
@@ -78,3 +94,13 @@ Frontend tables use semantic HTML and the `fmb-table` CSS class family for custo
 - File extensions and MIME types are validated.
 - Database writes use `$wpdb->prepare`, `$wpdb->insert` and typed formats.
 - Output is escaped before rendering.
+
+## Logs
+
+Import errors are written to:
+
+```text
+logs/fmb-error.log
+```
+
+The `logs/` directory includes `index.php` and `.htaccess` protections. Log files are ignored by Git.

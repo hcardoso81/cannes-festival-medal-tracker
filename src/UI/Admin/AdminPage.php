@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FestivalMedalTracker\UI\Admin;
 
 use FestivalMedalTracker\Application\ImportMedalsUseCase;
+use FestivalMedalTracker\Infrastructure\Logging\FileLogger;
 use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
 use RuntimeException;
 use Throwable;
@@ -25,10 +26,13 @@ final class AdminPage
 
     private MedalRepository $repository;
 
-    public function __construct(ImportMedalsUseCase $importer, MedalRepository $repository)
+    private FileLogger $logger;
+
+    public function __construct(ImportMedalsUseCase $importer, MedalRepository $repository, FileLogger $logger)
     {
         $this->importer   = $importer;
         $this->repository = $repository;
+        $this->logger     = $logger;
     }
 
     public function registerHooks(): void
@@ -83,7 +87,20 @@ final class AdminPage
             $summary  = $this->importer->import($filePath);
         } catch (RuntimeException $runtimeException) {
             $error = $runtimeException->getMessage();
+            $this->logger->error(
+                'Import runtime error.',
+                [
+                    'user_id' => get_current_user_id(),
+                    'error'   => $runtimeException->getMessage(),
+                ]
+            );
         } catch (Throwable $throwable) {
+            $this->logger->exception(
+                $throwable,
+                [
+                    'user_id' => get_current_user_id(),
+                ]
+            );
             $error = __('The import could not be completed. Please verify the file format and try again.', 'cannes-festival-medal-tracker');
         } finally {
             if ('' !== $filePath && file_exists($filePath)) {
@@ -141,6 +158,18 @@ final class AdminPage
 
                 <?php submit_button(__('Import medals', 'cannes-festival-medal-tracker')); ?>
             </form>
+
+            <h2><?php echo esc_html__('Shortcode previews', 'cannes-festival-medal-tracker'); ?></h2>
+            <div class="fmb-shortcode-previews">
+                <h3><?php echo esc_html('[medalByCountry]'); ?></h3>
+                <?php echo do_shortcode('[medalByCountry]'); ?>
+
+                <h3><?php echo esc_html('[medalsTotal]'); ?></h3>
+                <?php echo do_shortcode('[medalsTotal]'); ?>
+
+                <h3><?php echo esc_html('[medalByCountryDetail]'); ?></h3>
+                <?php echo do_shortcode('[medalByCountryDetail]'); ?>
+            </div>
 
             <h2><?php echo esc_html__('Current standings', 'cannes-festival-medal-tracker'); ?></h2>
             <?php $this->renderCurrentTable($rows); ?>
@@ -252,6 +281,7 @@ final class AdminPage
             <thead>
                 <tr>
                     <th scope="col"><?php echo esc_html__('Country', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Gold', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Silver', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Bronze', 'cannes-festival-medal-tracker'); ?></th>
@@ -262,6 +292,7 @@ final class AdminPage
                 <?php foreach ($rows as $row) : ?>
                     <tr>
                         <td><?php echo esc_html((string) $row['country']); ?></td>
+                        <td><?php echo esc_html((string) absint($row['gp'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['gold'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['silver'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['bronze'])); ?></td>
