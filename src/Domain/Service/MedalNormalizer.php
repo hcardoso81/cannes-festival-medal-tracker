@@ -10,6 +10,18 @@ if (!defined('ABSPATH')) {
 
 final class MedalNormalizer
 {
+    private const DEFAULT_ALLOWED_COUNTRIES = [
+        'PERU',
+        'COLOMBIA',
+        'PUERTO RICO',
+        'ECUADOR',
+        'CHILE',
+        'MEXICO',
+        'COSTA RICA',
+        'ARGENTINA',
+        'HONDURAS',
+    ];
+
     private const DEFAULT_PRIZE_SYNONYMS = [
         'gp'     => ['gp', 'grand prix', 'grand prix campaign'],
         'gold'   => ['gold lion', 'gold lion campaign', 'gold'],
@@ -46,6 +58,25 @@ final class MedalNormalizer
         return null;
     }
 
+    public function isAllowedCountry(string $country): bool
+    {
+        return in_array($this->countryKey($country), array_map([$this, 'countryKey'], $this->getAllowedCountries()), true);
+    }
+
+    public function getAllowedCountries(): array
+    {
+        $countries = self::DEFAULT_ALLOWED_COUNTRIES;
+
+        /**
+         * Allows projects to customize which countries are counted.
+         *
+         * Values are compared case-insensitively and accents are ignored.
+         */
+        $filtered = apply_filters('fmb_allowed_countries', $countries);
+
+        return is_array($filtered) ? array_values($filtered) : $countries;
+    }
+
     public function getPrizeSynonyms(): array
     {
         $synonyms = self::DEFAULT_PRIZE_SYNONYMS;
@@ -70,5 +101,14 @@ final class MedalNormalizer
         $prize = strtolower(trim($prize));
 
         return preg_replace('/\s+/', ' ', $prize) ?: '';
+    }
+
+    private function countryKey(string $country): string
+    {
+        $country = sanitize_text_field(wp_unslash($country));
+        $country = remove_accents($country);
+        $country = strtoupper(trim($country));
+
+        return preg_replace('/\s+/', ' ', $country) ?: '';
     }
 }

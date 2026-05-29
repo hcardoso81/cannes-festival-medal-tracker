@@ -43,11 +43,14 @@ Imports are handled through `admin-post.php` with action `fmb_import_medals`. Th
 5. Read rows with PhpSpreadsheet.
 6. Find and normalize the `location` and `prize` headers case-insensitively.
 7. Accumulate medals by country.
-8. Upsert totals into `{prefix}_fmb_country_medals`.
+8. Store a pending preview in a user-scoped transient without writing to the database.
 9. Delete the temporary uploaded file.
 10. Redirect back to the admin page with a transient-backed summary.
+11. Persist only after `fmb_approve_import_preview` validates capability, nonce and browser-confirmed POST.
 
 Ignored rows must keep enough debug context: spreadsheet row number, raw `location`, raw `prize` and reason. Show sanitized details in the admin notice and write the structured list to `logs/fmb-error.log`.
+
+Imports are two-step by design: preview first, then approve and merge. Do not write imported medal totals to the database during upload processing.
 
 The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for browser confirmation and log deleted row count.
 
@@ -77,6 +80,22 @@ Default mappings:
 - `Bronze`, `Bronze Lion`, `Bronze Lion Campaign` => `bronze`
 
 Extend synonyms with the `fmb_prize_synonyms` filter instead of editing import logic directly.
+
+## Allowed Countries
+
+Only the configured LATAM country allowlist is counted:
+
+- `PERU`
+- `COLOMBIA`
+- `PUERTO RICO`
+- `ECUADOR`
+- `CHILE`
+- `MEXICO`
+- `COSTA RICA`
+- `ARGENTINA`
+- `HONDURAS`
+
+Brazil and all other countries are ignored. Country matching is case-insensitive and accent-insensitive. Extend or replace the list with the `fmb_allowed_countries` filter. The admin page must display the current counted countries and prize values before import.
 
 ## Logging
 

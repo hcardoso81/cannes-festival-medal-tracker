@@ -1,6 +1,6 @@
 # Cannes Festival Medal Tracker
 
-WordPress plugin to import, manage and display festival medal standings by country using gold, silver and bronze medals.
+WordPress plugin to import, manage and display festival medal standings by country using GP, gold, silver and bronze medals.
 
 ## Technology Chips
 
@@ -51,6 +51,20 @@ Rows with empty countries or unrecognized prizes are ignored and reported in the
 The header row can use different casing, such as `Location` and `Prize`, and may appear after an initial title row.
 Ignored rows include the spreadsheet row number, original `location`, original `prize` and the reason. The same details are written to `logs/fmb-error.log`.
 
+Only these countries are counted:
+
+- `PERU`
+- `COLOMBIA`
+- `PUERTO RICO`
+- `ECUADOR`
+- `CHILE`
+- `MEXICO`
+- `COSTA RICA`
+- `ARGENTINA`
+- `HONDURAS`
+
+Other countries, including Brazil, are ignored and listed in the import summary/log.
+
 Prize synonyms can be extended with the `fmb_prize_synonyms` filter:
 
 ```php
@@ -62,11 +76,23 @@ add_filter('fmb_prize_synonyms', static function (array $synonyms): array {
 });
 ```
 
+Allowed countries can be extended or replaced with the `fmb_allowed_countries` filter:
+
+```php
+add_filter('fmb_allowed_countries', static function (array $countries): array {
+    $countries[] = 'URUGUAY';
+
+    return $countries;
+});
+```
+
 ## Admin Usage
 
 Go to **Medal Tracker** in the WordPress admin dashboard.
 
-The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. Imported medals are accumulated by country. Existing countries are incremented; new countries are inserted.
+The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. Uploading a file creates a pending preview only; no medal totals are persisted yet. The admin page shows the countries and prize values that will be counted before upload.
+
+After reviewing the preview, use **Approve and continue** to merge the detected medals into the database. Existing countries are incremented; new countries are inserted. The approval action requires a nonce, `manage_options` and browser confirmation.
 
 The admin page also includes a reset action to delete all medal rows from the plugin table. The reset requires `manage_options`, a nonce and a browser confirmation.
 
@@ -99,6 +125,7 @@ Frontend tables use semantic HTML and the `fmb-table` CSS class family for custo
 
 - Admin page requires `manage_options`.
 - Upload form uses WordPress nonces.
+- Import approval uses WordPress nonces and browser confirmation before database writes.
 - Reset form uses WordPress nonces and browser confirmation.
 - Uploads are processed with `wp_handle_upload`.
 - File extensions and MIME types are validated.

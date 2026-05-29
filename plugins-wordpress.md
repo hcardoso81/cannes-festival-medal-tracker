@@ -466,6 +466,8 @@ Para imports Excel:
 - Ignorar filas incompletas o con valores no reconocidos, registrando un resumen claro.
 - Cuando se ignoren filas, conservar y mostrar/loguear contexto suficiente para debug: numero real de fila, valores originales relevantes y razon del descarte.
 - Normalizar datos antes de persistirlos.
+- Si el import solo debe contabilizar un conjunto permitido de entidades, mantener un allowlist centralizado en dominio/configuracion, mostrarlo en admin y registrar como ignoradas las filas fuera de la lista.
+- Cuando el import impacte datos acumulativos o destructivos, usar un flujo de preview y aprobacion: primero procesar y mostrar los datos detectados, luego persistir solo tras un POST confirmado con nonce y capability.
 - Persistir conteos como enteros no negativos.
 
 ## AJAX y admin-post

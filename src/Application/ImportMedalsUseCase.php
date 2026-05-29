@@ -30,7 +30,7 @@ final class ImportMedalsUseCase
         $this->repository = $repository;
     }
 
-    public function import(string $filePath): array
+    public function preview(string $filePath): array
     {
         $rows    = $this->reader->readRows($filePath);
         $summary = [
@@ -42,6 +42,7 @@ final class ImportMedalsUseCase
             'errors'            => [],
             'ignored_details'   => [],
             'imported'          => [],
+            'preview'           => true,
         ];
 
         $accumulator = [];
@@ -53,10 +54,14 @@ final class ImportMedalsUseCase
             $country     = $this->normalizer->normalizeCountry($rawLocation);
             $medal       = $this->normalizer->normalizePrize($rawPrize);
 
-            if ('' === $country || null === $medal) {
-                $reason = '' === $country
-                    ? __('missing or invalid location', 'cannes-festival-medal-tracker')
-                    : __('unrecognized prize', 'cannes-festival-medal-tracker');
+            if ('' === $country || null === $medal || !$this->normalizer->isAllowedCountry($country)) {
+                if ('' === $country) {
+                    $reason = __('missing or invalid location', 'cannes-festival-medal-tracker');
+                } elseif (null === $medal) {
+                    $reason = __('unrecognized prize', 'cannes-festival-medal-tracker');
+                } else {
+                    $reason = __('country is not in the allowed list', 'cannes-festival-medal-tracker');
+                }
 
                 $summary['ignored_rows']++;
                 $summary['errors'][] = sprintf(
@@ -85,12 +90,46 @@ final class ImportMedalsUseCase
         }
 
         foreach ($accumulator as $country => $medals) {
+            $summary['imported'][] = [
+                'country' => $country,
+                'medals'  => $medals,
+            ];
+        }
+
+        return $summary;
+    }
+
+    public function getAllowedCountries(): array
+    {
+        return $this->normalizer->getAllowedCountries();
+    }
+
+    public function getPrizeSynonyms(): array
+    {
+        return $this->normalizer->getPrizeSynonyms();
+    }
+
+    public function commitPreview(array $preview): array
+    {
+        $summary = $preview;
+        $summary['countries_created'] = 0;
+        $summary['countries_updated'] = 0;
+        $summary['preview']           = false;
+        $summary['committed']         = true;
+
+        foreach ($summary['imported'] ?? [] as $item) {
+            if (empty($item['country']) || !is_array($item['medals'] ?? null)) {
+                continue;
+            }
+
+            $country = (string) $item['country'];
+            $medals  = $item['medals'];
             $result = $this->repository->upsertAndIncrement(
                 $country,
-                (int) $medals['gp'],
-                (int) $medals['gold'],
-                (int) $medals['silver'],
-                (int) $medals['bronze']
+                (int) ($medals['gp'] ?? 0),
+                (int) ($medals['gold'] ?? 0),
+                (int) ($medals['silver'] ?? 0),
+                (int) ($medals['bronze'] ?? 0)
             );
 
             if ('created' === $result) {
@@ -98,11 +137,6 @@ final class ImportMedalsUseCase
             } else {
                 $summary['countries_updated']++;
             }
-
-            $summary['imported'][] = [
-                'country' => $country,
-                'medals'  => $medals,
-            ];
         }
 
         return $summary;
