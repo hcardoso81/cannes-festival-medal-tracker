@@ -20,6 +20,9 @@ final class AdminPage
     private const ACTION = 'fmb_import_medals';
     private const NONCE_ACTION = 'fmb_import_medals_nonce';
     private const NONCE_FIELD = 'fmb_import_nonce';
+    private const RESET_ACTION = 'fmb_reset_medals';
+    private const RESET_NONCE_ACTION = 'fmb_reset_medals_nonce';
+    private const RESET_NONCE_FIELD = 'fmb_reset_nonce';
     private const TRANSIENT_PREFIX = 'fmb_import_summary_';
 
     private ImportMedalsUseCase $importer;
@@ -39,6 +42,7 @@ final class AdminPage
     {
         add_action('admin_menu', [$this, 'registerMenu']);
         add_action('admin_post_' . self::ACTION, [$this, 'handleImport']);
+        add_action('admin_post_' . self::RESET_ACTION, [$this, 'handleReset']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
     }
 
@@ -85,6 +89,7 @@ final class AdminPage
         try {
             $filePath = $this->handleUpload();
             $summary  = $this->importer->import($filePath);
+            $this->logIgnoredRows($summary);
         } catch (RuntimeException $runtimeException) {
             $error = $runtimeException->getMessage();
             $this->logger->error(
@@ -113,6 +118,40 @@ final class AdminPage
             [
                 'summary' => $summary,
                 'error'   => $error,
+            ],
+            MINUTE_IN_SECONDS * 10
+        );
+
+        wp_safe_redirect(admin_url('admin.php?page=' . self::MENU_SLUG));
+        exit;
+    }
+
+    public function handleReset(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You are not allowed to reset medals.', 'cannes-festival-medal-tracker'));
+        }
+
+        check_admin_referer(self::RESET_NONCE_ACTION, self::RESET_NONCE_FIELD);
+
+        $deleted = $this->repository->deleteAll();
+
+        $this->logger->warning(
+            'Medal standings were reset from admin.',
+            [
+                'user_id'      => get_current_user_id(),
+                'deleted_rows' => $deleted,
+            ]
+        );
+
+        set_transient(
+            self::TRANSIENT_PREFIX . get_current_user_id(),
+            [
+                'summary' => [
+                    'reset'        => true,
+                    'deleted_rows' => $deleted,
+                ],
+                'error'   => '',
             ],
             MINUTE_IN_SECONDS * 10
         );
@@ -173,6 +212,20 @@ final class AdminPage
 
             <h2><?php echo esc_html__('Current standings', 'cannes-festival-medal-tracker'); ?></h2>
             <?php $this->renderCurrentTable($rows); ?>
+
+            <div class="fmb-danger-zone">
+                <h2><?php echo esc_html__('Reset medal standings', 'cannes-festival-medal-tracker'); ?></h2>
+                <p><?php echo esc_html__('This removes all medal rows from the plugin table. This action cannot be undone.', 'cannes-festival-medal-tracker'); ?></p>
+                <form
+                    method="post"
+                    action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
+                    onsubmit="return confirm('<?php echo esc_js(__('Are you sure you want to reset the medal standings?', 'cannes-festival-medal-tracker')); ?>');"
+                >
+                    <input type="hidden" name="action" value="<?php echo esc_attr(self::RESET_ACTION); ?>">
+                    <?php wp_nonce_field(self::RESET_NONCE_ACTION, self::RESET_NONCE_FIELD); ?>
+                    <?php submit_button(__('Reset medal standings', 'cannes-festival-medal-tracker'), 'delete', 'submit', false); ?>
+                </form>
+            </div>
         </div>
         <?php
     }
@@ -243,6 +296,25 @@ final class AdminPage
             return;
         }
 
+        if (!empty($summary['reset'])) {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p>
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: %d: deleted database rows. */
+                            __('Medal standings reset complete. Deleted rows: %d.', 'cannes-festival-medal-tracker'),
+                            (int) ($summary['deleted_rows'] ?? 0)
+                        )
+                    );
+                    ?>
+                </p>
+            </div>
+            <?php
+            return;
+        }
+
         ?>
         <div class="notice notice-success is-dismissible">
             <p>
@@ -261,10 +333,21 @@ final class AdminPage
             </p>
             <?php if (!empty($summary['errors']) && is_array($summary['errors'])) : ?>
                 <ul class="fmb-import-errors">
-                    <?php foreach (array_slice($summary['errors'], 0, 10) as $error) : ?>
+                    <?php foreach ($summary['errors'] as $error) : ?>
                         <li><?php echo esc_html((string) $error); ?></li>
                     <?php endforeach; ?>
                 </ul>
+                <p>
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: %s: plugin log path. */
+                            __('Full ignored-row details were also written to %s.', 'cannes-festival-medal-tracker'),
+                            'logs/fmb-error.log'
+                        )
+                    );
+                    ?>
+                </p>
             <?php endif; ?>
         </div>
         <?php
@@ -302,5 +385,23 @@ final class AdminPage
             </tbody>
         </table>
         <?php
+    }
+
+    private function logIgnoredRows(?array $summary): void
+    {
+        if (empty($summary['ignored_details']) || !is_array($summary['ignored_details'])) {
+            return;
+        }
+
+        $this->logger->warning(
+            'Import completed with ignored rows.',
+            [
+                'user_id'      => get_current_user_id(),
+                'total_rows'   => (int) ($summary['total_rows'] ?? 0),
+                'valid_rows'   => (int) ($summary['valid_rows'] ?? 0),
+                'ignored_rows' => (int) ($summary['ignored_rows'] ?? 0),
+                'rows'         => $summary['ignored_details'],
+            ]
+        );
     }
 }

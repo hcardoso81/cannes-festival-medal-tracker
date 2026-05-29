@@ -43,14 +43,15 @@ final class PhpSpreadsheetExcelReader
         }
 
         $headers = $headerData['headers'];
-        $rows    = array_slice($rows, $headerData['index'] + 1);
+        $rows = array_slice($rows, $headerData['offset'] + 1, null, true);
 
         $normalizedRows = [];
 
-        foreach ($rows as $row) {
+        foreach ($rows as $rowNumber => $row) {
             $normalizedRows[] = [
-                'location' => isset($row[$headers['location']]) ? (string) $row[$headers['location']] : '',
-                'prize'    => isset($row[$headers['prize']]) ? (string) $row[$headers['prize']] : '',
+                'row_number' => is_numeric($rowNumber) ? (int) $rowNumber : 0,
+                'location'   => isset($row[$headers['location']]) ? (string) $row[$headers['location']] : '',
+                'prize'      => isset($row[$headers['prize']]) ? (string) $row[$headers['prize']] : '',
             ];
         }
 
@@ -74,8 +75,10 @@ final class PhpSpreadsheetExcelReader
 
     private function findHeaderRow(array $rows): ?array
     {
-        foreach ($rows as $index => $row) {
-            if ($index >= self::HEADER_SCAN_LIMIT) {
+        $offset = 0;
+
+        foreach ($rows as $rowNumber => $row) {
+            if ($offset >= self::HEADER_SCAN_LIMIT) {
                 break;
             }
 
@@ -83,10 +86,13 @@ final class PhpSpreadsheetExcelReader
 
             if ($this->hasRequiredHeaders($headers)) {
                 return [
-                    'index'   => $index,
-                    'headers' => $headers,
+                    'offset'     => $offset,
+                    'row_number' => is_numeric($rowNumber) ? (int) $rowNumber : 0,
+                    'headers'    => $headers,
                 ];
             }
+
+            $offset++;
         }
 
         return null;

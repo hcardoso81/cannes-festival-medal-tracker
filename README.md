@@ -49,6 +49,7 @@ Supported `prize` values:
 
 Rows with empty countries or unrecognized prizes are ignored and reported in the import summary.
 The header row can use different casing, such as `Location` and `Prize`, and may appear after an initial title row.
+Ignored rows include the spreadsheet row number, original `location`, original `prize` and the reason. The same details are written to `logs/fmb-error.log`.
 
 Prize synonyms can be extended with the `fmb_prize_synonyms` filter:
 
@@ -66,6 +67,8 @@ add_filter('fmb_prize_synonyms', static function (array $synonyms): array {
 Go to **Medal Tracker** in the WordPress admin dashboard.
 
 The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. Imported medals are accumulated by country. Existing countries are incremented; new countries are inserted.
+
+The admin page also includes a reset action to delete all medal rows from the plugin table. The reset requires `manage_options`, a nonce and a browser confirmation.
 
 ## Shortcodes
 
@@ -96,6 +99,7 @@ Frontend tables use semantic HTML and the `fmb-table` CSS class family for custo
 
 - Admin page requires `manage_options`.
 - Upload form uses WordPress nonces.
+- Reset form uses WordPress nonces and browser confirmation.
 - Uploads are processed with `wp_handle_upload`.
 - File extensions and MIME types are validated.
 - Database writes use `$wpdb->prepare`, `$wpdb->insert` and typed formats.
@@ -110,3 +114,4 @@ logs/fmb-error.log
 ```
 
 The `logs/` directory includes `index.php` and `.htaccess` protections. Log files are ignored by Git.
+Imports that finish with ignored rows also write the ignored row details to the log so invalid source values are not lost.

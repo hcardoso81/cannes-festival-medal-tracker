@@ -464,6 +464,7 @@ Para imports Excel:
 - Si la dependencia no esta instalada, fallar de forma controlada y documentar `composer install`.
 - Validar columnas requeridas antes de procesar filas.
 - Ignorar filas incompletas o con valores no reconocidos, registrando un resumen claro.
+- Cuando se ignoren filas, conservar y mostrar/loguear contexto suficiente para debug: numero real de fila, valores originales relevantes y razon del descarte.
 - Normalizar datos antes de persistirlos.
 - Persistir conteos como enteros no negativos.
 
@@ -484,6 +485,14 @@ Para `admin-post.php`:
 3. Validar capability.
 4. Sanitizar request.
 5. Redirigir con `wp_safe_redirect()` cuando corresponda.
+
+Para acciones destructivas en admin:
+
+1. Usar una zona visual de peligro si la accion borra datos.
+2. Pedir confirmacion explicita en la UI.
+3. Validar nonce y capability en servidor.
+4. Registrar la accion en el log del plugin con `user_id`, accion y cantidad de datos afectados.
+5. No ejecutar borrados desde enlaces GET; usar POST.
 
 ## ACF
 

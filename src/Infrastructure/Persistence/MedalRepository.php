@@ -119,4 +119,14 @@ final class MedalRepository
             ARRAY_A
         ) ?: [];
     }
+
+    public function deleteAll(): int
+    {
+        global $wpdb;
+
+        $tableName = DatabaseInstaller::tableName();
+        $deleted   = $wpdb->query("DELETE FROM {$tableName}");
+
+        return is_int($deleted) ? $deleted : 0;
+    }
 }

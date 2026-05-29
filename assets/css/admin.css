@@ -24,3 +24,17 @@
 .fmb-shortcode-previews h3 {
     margin: 1.5rem 0 0.5rem;
 }
+
+.fmb-danger-zone {
+    max-width: 760px;
+    margin: 2rem 0;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #d63638;
+    border-left-width: 4px;
+}
+
+.fmb-danger-zone h2 {
+    margin-top: 0;
+    color: #b32d2e;
+}

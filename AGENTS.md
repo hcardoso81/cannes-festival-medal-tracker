@@ -47,6 +47,10 @@ Imports are handled through `admin-post.php` with action `fmb_import_medals`. Th
 9. Delete the temporary uploaded file.
 10. Redirect back to the admin page with a transient-backed summary.
 
+Ignored rows must keep enough debug context: spreadsheet row number, raw `location`, raw `prize` and reason. Show sanitized details in the admin notice and write the structured list to `logs/fmb-error.log`.
+
+The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for browser confirmation and log deleted row count.
+
 ## Shortcodes
 
 Register both requested camel-case names and lowercase aliases:
@@ -81,6 +85,7 @@ Plugin-specific errors must be written to `logs/fmb-error.log` through `Festival
 Rules:
 
 - Log import failures with enough context to debug locally.
+- Log ignored import rows with source values, not only row numbers.
 - Do not expose stack traces or absolute paths in admin notices.
 - Keep `logs/index.php` and `logs/.htaccess` in place.
 - Do not commit `.log` files.
@@ -88,6 +93,7 @@ Rules:
 ## Security Rules
 
 - Never process an admin request without capability and nonce checks.
+- Destructive admin actions must include nonce, capability check, confirmation UI and plugin log entry.
 - Never trust uploaded filenames or MIME values alone.
 - Use `wp_check_filetype_and_ext` and `wp_handle_upload` for Excel uploads.
 - Delete imported upload files after processing.

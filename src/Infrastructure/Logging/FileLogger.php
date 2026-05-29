@@ -19,6 +19,11 @@ final class FileLogger
         $this->write('error', $message, $context);
     }
 
+    public function warning(string $message, array $context = []): void
+    {
+        $this->write('warning', $message, $context);
+    }
+
     public function exception(Throwable $throwable, array $context = []): void
     {
         $context['exception'] = get_class($throwable);

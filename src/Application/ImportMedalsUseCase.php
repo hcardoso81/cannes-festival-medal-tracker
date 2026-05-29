@@ -40,22 +40,39 @@ final class ImportMedalsUseCase
             'countries_created' => 0,
             'countries_updated' => 0,
             'errors'            => [],
+            'ignored_details'   => [],
             'imported'          => [],
         ];
 
         $accumulator = [];
 
         foreach ($rows as $index => $row) {
-            $country = $this->normalizer->normalizeCountry((string) ($row['location'] ?? ''));
-            $medal   = $this->normalizer->normalizePrize((string) ($row['prize'] ?? ''));
+            $rawLocation = (string) ($row['location'] ?? '');
+            $rawPrize    = (string) ($row['prize'] ?? '');
+            $rowNumber   = !empty($row['row_number']) ? (int) $row['row_number'] : $index + 2;
+            $country     = $this->normalizer->normalizeCountry($rawLocation);
+            $medal       = $this->normalizer->normalizePrize($rawPrize);
 
             if ('' === $country || null === $medal) {
+                $reason = '' === $country
+                    ? __('missing or invalid location', 'cannes-festival-medal-tracker')
+                    : __('unrecognized prize', 'cannes-festival-medal-tracker');
+
                 $summary['ignored_rows']++;
                 $summary['errors'][] = sprintf(
-                    /* translators: %d: spreadsheet row number. */
-                    __('Row %d was ignored because location or prize is invalid.', 'cannes-festival-medal-tracker'),
-                    $index + 2
+                    /* translators: 1: spreadsheet row number, 2: location value, 3: prize value, 4: reason. */
+                    __('Row %1$d ignored. Location: "%2$s". Prize: "%3$s". Reason: %4$s.', 'cannes-festival-medal-tracker'),
+                    $rowNumber,
+                    $this->cleanCellForSummary($rawLocation),
+                    $this->cleanCellForSummary($rawPrize),
+                    $reason
                 );
+                $summary['ignored_details'][] = [
+                    'row'          => $rowNumber,
+                    'raw_location' => $this->cleanCellForSummary($rawLocation),
+                    'raw_prize'    => $this->cleanCellForSummary($rawPrize),
+                    'reason'       => $reason,
+                ];
                 continue;
             }
 
@@ -89,5 +106,13 @@ final class ImportMedalsUseCase
         }
 
         return $summary;
+    }
+
+    private function cleanCellForSummary(string $value): string
+    {
+        $value = sanitize_text_field(wp_unslash($value));
+        $value = trim(preg_replace('/\s+/', ' ', $value) ?: '');
+
+        return '' === $value ? '(empty)' : $value;
     }
 }
