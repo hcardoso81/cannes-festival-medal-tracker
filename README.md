@@ -4,7 +4,13 @@ WordPress plugin to import, manage and display festival medal standings by count
 
 ## Technology Chips
 
-`WordPress` `PHP 7.4+` `OOP` `Namespaces` `Plugin API` `Shortcodes` `Admin Pages` `Custom Database Tables` `wpdb` `dbDelta` `Composer` `PhpSpreadsheet` `Excel Import` `HTML` `CSS`
+![WordPress](https://img.shields.io/badge/WordPress-21759B?style=for-the-badge&logo=wordpress&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![Composer](https://img.shields.io/badge/Composer-885630?style=for-the-badge&logo=composer&logoColor=white)
+![PhpSpreadsheet](https://img.shields.io/badge/PhpSpreadsheet-Excel%20Import-217346?style=for-the-badge&logo=microsoftexcel&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-Custom%20Tables-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-Frontend-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-Styles-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 
 ## Requirements
 

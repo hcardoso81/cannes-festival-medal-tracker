@@ -13,7 +13,7 @@ Context for AI agents and developers working on this WordPress plugin.
 - Database table: `{prefix}_fmb_country_medals`.
 - Dependency: `phpoffice/phpspreadsheet` through Composer.
 - Error log: `logs/fmb-error.log`.
-- README technology chips: WordPress, PHP 7.4+, OOP, Namespaces, Plugin API, Shortcodes, Admin Pages, Custom Database Tables, wpdb, dbDelta, Composer, PhpSpreadsheet, Excel Import, HTML, CSS.
+- README technology chips: visual Shields.io badges with colors and logos for WordPress, PHP 7.4+, Composer, PhpSpreadsheet/Excel Import, MySQL/custom tables, HTML and CSS.
 
 ## Architecture
 

@@ -627,7 +627,7 @@ Priorizar tests en:
 
 Actualizar `README.md` cuando cambie:
 
-- Chips tecnologicos al inicio del documento con todas las tecnologias, APIs, librerias, formatos e integraciones usadas por el plugin.
+- Chips tecnologicos visuales al inicio del documento con badges de colores y logos para todas las tecnologias, APIs, librerias, formatos e integraciones usadas por el plugin.
 - Instalacion.
 - Configuracion.
 - Shortcodes.
@@ -648,10 +648,13 @@ Formato recomendado:
 ```md
 ## Technology Chips
 
-`WordPress` `PHP 8.1+` `OOP` `Namespaces` `Composer` `Shortcodes` `Custom Tables`
+![WordPress](https://img.shields.io/badge/WordPress-21759B?style=for-the-badge&logo=wordpress&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![Composer](https://img.shields.io/badge/Composer-885630?style=for-the-badge&logo=composer&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-Custom%20Tables-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ```
 
-Los chips deben mantenerse actualizados cuando se agreguen o retiren tecnologias, dependencias, integraciones, formatos de archivo o APIs relevantes.
+Usar preferentemente badges de Shields.io con `style=for-the-badge`, colores reconocibles de marca y logos oficiales cuando existan. Los chips deben mantenerse actualizados cuando se agreguen o retiren tecnologias, dependencias, integraciones, formatos de archivo o APIs relevantes.
 
 ## AGENTS.md
 
