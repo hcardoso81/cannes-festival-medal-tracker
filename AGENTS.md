@@ -72,9 +72,9 @@ Prize normalization lives in `FestivalMedalTracker\Domain\Service\MedalNormalize
 Default mappings:
 
 - `GP`, `Grand Prix`, `Grand Prix Campaign` => `gp`
-- `Gold`, `Gold Lion` => `gold`
-- `Silver`, `Silver Lion` => `silver`
-- `Bronze`, `Bronze Lion` => `bronze`
+- `Gold`, `Gold Lion`, `Gold Lion Campaign` => `gold`
+- `Silver`, `Silver Lion`, `Silver Lion Campaign` => `silver`
+- `Bronze`, `Bronze Lion`, `Bronze Lion Campaign` => `bronze`
 
 Extend synonyms with the `fmb_prize_synonyms` filter instead of editing import logic directly.
 

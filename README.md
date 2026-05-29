@@ -43,9 +43,9 @@ The first row must contain at least these columns:
 Supported `prize` values:
 
 - `GP`, `Grand Prix` and `Grand Prix Campaign` map to GP.
-- `Gold Lion` maps to gold.
-- `Silver Lion` maps to silver.
-- `Bronze Lion` maps to bronze.
+- `Gold Lion`, `Gold Lion Campaign` and `Gold` map to gold.
+- `Silver Lion`, `Silver Lion Campaign` and `Silver` map to silver.
+- `Bronze Lion`, `Bronze Lion Campaign` and `Bronze` map to bronze.
 
 Rows with empty countries or unrecognized prizes are ignored and reported in the import summary.
 The header row can use different casing, such as `Location` and `Prize`, and may appear after an initial title row.

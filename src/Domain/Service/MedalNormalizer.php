@@ -12,9 +12,9 @@ final class MedalNormalizer
 {
     private const DEFAULT_PRIZE_SYNONYMS = [
         'gp'     => ['gp', 'grand prix', 'grand prix campaign'],
-        'gold'   => ['gold lion', 'gold'],
-        'silver' => ['silver lion', 'silver'],
-        'bronze' => ['bronze lion', 'bronze'],
+        'gold'   => ['gold lion', 'gold lion campaign', 'gold'],
+        'silver' => ['silver lion', 'silver lion campaign', 'silver'],
+        'bronze' => ['bronze lion', 'bronze lion campaign', 'bronze'],
     ];
 
     public function normalizeCountry(string $country): string
