@@ -92,7 +92,7 @@ Go to **Medal Tracker** in the WordPress admin dashboard.
 
 The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. Uploading a file creates a pending preview only; no medal totals are persisted yet. The admin page shows the countries and prize values that will be counted before upload.
 
-After reviewing the preview, use **Approve and continue** to merge the detected medals into the database. Existing countries are incremented; new countries are inserted. The approval action requires a nonce, `manage_options` and browser confirmation.
+After reviewing the preview, use **Approve and continue** to merge the detected medals into the database. Existing countries are incremented; new countries are inserted. You can also discard the pending preview without changing the database. Approval and discard actions require a nonce, `manage_options` and browser confirmation.
 
 The admin page also includes a reset action to delete all medal rows from the plugin table. The reset requires `manage_options`, a nonce and a browser confirmation.
 

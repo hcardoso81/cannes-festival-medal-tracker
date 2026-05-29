@@ -26,6 +26,9 @@ final class AdminPage
     private const APPROVE_ACTION = 'fmb_approve_import_preview';
     private const APPROVE_NONCE_ACTION = 'fmb_approve_import_preview_nonce';
     private const APPROVE_NONCE_FIELD = 'fmb_approve_preview_nonce';
+    private const DISCARD_ACTION = 'fmb_discard_import_preview';
+    private const DISCARD_NONCE_ACTION = 'fmb_discard_import_preview_nonce';
+    private const DISCARD_NONCE_FIELD = 'fmb_discard_preview_nonce';
     private const TRANSIENT_PREFIX = 'fmb_import_summary_';
     private const PREVIEW_TRANSIENT_PREFIX = 'fmb_import_preview_';
 
@@ -47,6 +50,7 @@ final class AdminPage
         add_action('admin_menu', [$this, 'registerMenu']);
         add_action('admin_post_' . self::ACTION, [$this, 'handleImport']);
         add_action('admin_post_' . self::APPROVE_ACTION, [$this, 'handleApprovePreview']);
+        add_action('admin_post_' . self::DISCARD_ACTION, [$this, 'handleDiscardPreview']);
         add_action('admin_post_' . self::RESET_ACTION, [$this, 'handleReset']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
     }
@@ -128,6 +132,41 @@ final class AdminPage
             [
                 'summary' => $summary,
                 'error'   => $error,
+            ],
+            MINUTE_IN_SECONDS * 10
+        );
+
+        wp_safe_redirect(admin_url('admin.php?page=' . self::MENU_SLUG));
+        exit;
+    }
+
+    public function handleDiscardPreview(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('No tienes permisos para descartar importaciones.', 'cannes-festival-medal-tracker'));
+        }
+
+        check_admin_referer(self::DISCARD_NONCE_ACTION, self::DISCARD_NONCE_FIELD);
+
+        $preview = get_transient($this->previewTransientKey());
+        delete_transient($this->previewTransientKey());
+
+        $this->logger->warning(
+            'Import preview discarded.',
+            [
+                'user_id'     => get_current_user_id(),
+                'source_file' => is_array($preview) ? (string) ($preview['source_file'] ?? '') : '',
+                'valid_rows'  => is_array($preview) ? (int) ($preview['valid_rows'] ?? 0) : 0,
+            ]
+        );
+
+        set_transient(
+            self::TRANSIENT_PREFIX . get_current_user_id(),
+            [
+                'summary' => [
+                    'discarded' => true,
+                ],
+                'error'   => '',
             ],
             MINUTE_IN_SECONDS * 10
         );
@@ -428,6 +467,15 @@ final class AdminPage
             return;
         }
 
+        if (!empty($summary['discarded'])) {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php echo esc_html__('Vista previa descartada. No se guardaron cambios en la base de datos.', 'cannes-festival-medal-tracker'); ?></p>
+            </div>
+            <?php
+            return;
+        }
+
         ?>
         <div class="notice notice-success is-dismissible">
             <p>
@@ -538,16 +586,26 @@ final class AdminPage
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            <form
-                class="fmb-approve-preview-form"
-                method="post"
-                action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
-                onsubmit="return confirm('<?php echo esc_js(__('Aprobar y continuar? Esto va a combinar la vista previa con el medallero guardado.', 'cannes-festival-medal-tracker')); ?>');"
-            >
-                <input type="hidden" name="action" value="<?php echo esc_attr(self::APPROVE_ACTION); ?>">
-                <?php wp_nonce_field(self::APPROVE_NONCE_ACTION, self::APPROVE_NONCE_FIELD); ?>
-                <?php submit_button(__('Aprobar y continuar', 'cannes-festival-medal-tracker'), 'primary', 'submit', false); ?>
-            </form>
+            <div class="fmb-preview-actions">
+                <form
+                    method="post"
+                    action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
+                    onsubmit="return confirm('<?php echo esc_js(__('Aprobar y continuar? Esto va a combinar la vista previa con el medallero guardado.', 'cannes-festival-medal-tracker')); ?>');"
+                >
+                    <input type="hidden" name="action" value="<?php echo esc_attr(self::APPROVE_ACTION); ?>">
+                    <?php wp_nonce_field(self::APPROVE_NONCE_ACTION, self::APPROVE_NONCE_FIELD); ?>
+                    <?php submit_button(__('Aprobar y continuar', 'cannes-festival-medal-tracker'), 'primary', 'submit', false); ?>
+                </form>
+                <form
+                    method="post"
+                    action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
+                    onsubmit="return confirm('<?php echo esc_js(__('Descartar esta vista previa? No se guardara ningun cambio.', 'cannes-festival-medal-tracker')); ?>');"
+                >
+                    <input type="hidden" name="action" value="<?php echo esc_attr(self::DISCARD_ACTION); ?>">
+                    <?php wp_nonce_field(self::DISCARD_NONCE_ACTION, self::DISCARD_NONCE_FIELD); ?>
+                    <?php submit_button(__('Descartar', 'cannes-festival-medal-tracker'), 'secondary', 'submit', false); ?>
+                </form>
+            </div>
         </div>
         <?php
     }

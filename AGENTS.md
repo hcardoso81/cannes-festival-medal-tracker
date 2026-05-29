@@ -47,10 +47,11 @@ Imports are handled through `admin-post.php` with action `fmb_import_medals`. Th
 9. Delete the temporary uploaded file.
 10. Redirect back to the admin page with a transient-backed summary.
 11. Persist only after `fmb_approve_import_preview` validates capability, nonce and browser-confirmed POST.
+12. Allow pending previews to be discarded with `fmb_discard_import_preview`, capability, nonce and browser-confirmed POST.
 
 Ignored rows must keep enough debug context: spreadsheet row number, raw `location`, raw `prize` and reason. Show sanitized details in the admin notice and write the structured list to `logs/fmb-error.log`.
 
-Imports are two-step by design: preview first, then approve and merge. Do not write imported medal totals to the database during upload processing.
+Imports are two-step by design: preview first, then approve and merge. Do not write imported medal totals to the database during upload processing. A pending preview can be discarded without touching persisted medal data.
 
 The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for browser confirmation and log deleted row count.
 

@@ -81,8 +81,15 @@
     margin-top: 0;
 }
 
-.fmb-approve-preview-form {
+.fmb-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     margin-top: 1rem;
+}
+
+.fmb-preview-actions form {
+    margin: 0;
 }
 
 .fmb-danger-zone {
