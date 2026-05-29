@@ -1,0 +1,15 @@
+{
+  "name": "hcardoso/cannes-festival-medal-tracker",
+  "description": "WordPress plugin to import and display festival medal standings by country.",
+  "type": "wordpress-plugin",
+  "license": "proprietary",
+  "require": {
+    "php": ">=7.4",
+    "phpoffice/phpspreadsheet": "^1.29"
+  },
+  "autoload": {
+    "psr-4": {
+      "FestivalMedalTracker\\": "src/"
+    }
+  }
+}

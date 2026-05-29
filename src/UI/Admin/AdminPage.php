@@ -1,0 +1,275 @@
+<?php
+
+declare(strict_types=1);
+
+namespace FestivalMedalTracker\UI\Admin;
+
+use FestivalMedalTracker\Application\ImportMedalsUseCase;
+use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
+use RuntimeException;
+use Throwable;
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+final class AdminPage
+{
+    private const MENU_SLUG = 'fmb-medal-tracker';
+    private const ACTION = 'fmb_import_medals';
+    private const NONCE_ACTION = 'fmb_import_medals_nonce';
+    private const NONCE_FIELD = 'fmb_import_nonce';
+    private const TRANSIENT_PREFIX = 'fmb_import_summary_';
+
+    private ImportMedalsUseCase $importer;
+
+    private MedalRepository $repository;
+
+    public function __construct(ImportMedalsUseCase $importer, MedalRepository $repository)
+    {
+        $this->importer   = $importer;
+        $this->repository = $repository;
+    }
+
+    public function registerHooks(): void
+    {
+        add_action('admin_menu', [$this, 'registerMenu']);
+        add_action('admin_post_' . self::ACTION, [$this, 'handleImport']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
+    }
+
+    public function registerMenu(): void
+    {
+        add_menu_page(
+            __('Festival Medal Tracker', 'cannes-festival-medal-tracker'),
+            __('Medal Tracker', 'cannes-festival-medal-tracker'),
+            'manage_options',
+            self::MENU_SLUG,
+            [$this, 'renderPage'],
+            'dashicons-awards',
+            58
+        );
+    }
+
+    public function enqueueAssets(string $hookSuffix): void
+    {
+        if ('toplevel_page_' . self::MENU_SLUG !== $hookSuffix) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'fmb-admin',
+            FMB_URL . 'assets/css/admin.css',
+            [],
+            FMB_VERSION
+        );
+    }
+
+    public function handleImport(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You are not allowed to import medals.', 'cannes-festival-medal-tracker'));
+        }
+
+        check_admin_referer(self::NONCE_ACTION, self::NONCE_FIELD);
+
+        $summary = null;
+        $error   = '';
+
+        $filePath = '';
+
+        try {
+            $filePath = $this->handleUpload();
+            $summary  = $this->importer->import($filePath);
+        } catch (RuntimeException $runtimeException) {
+            $error = $runtimeException->getMessage();
+        } catch (Throwable $throwable) {
+            $error = __('The import could not be completed. Please verify the file format and try again.', 'cannes-festival-medal-tracker');
+        } finally {
+            if ('' !== $filePath && file_exists($filePath)) {
+                wp_delete_file($filePath);
+            }
+        }
+
+        set_transient(
+            self::TRANSIENT_PREFIX . get_current_user_id(),
+            [
+                'summary' => $summary,
+                'error'   => $error,
+            ],
+            MINUTE_IN_SECONDS * 10
+        );
+
+        wp_safe_redirect(admin_url('admin.php?page=' . self::MENU_SLUG));
+        exit;
+    }
+
+    public function renderPage(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You are not allowed to access this page.', 'cannes-festival-medal-tracker'));
+        }
+
+        $notice = get_transient(self::TRANSIENT_PREFIX . get_current_user_id());
+        delete_transient(self::TRANSIENT_PREFIX . get_current_user_id());
+        $rows = $this->repository->getCountryDetails();
+        ?>
+        <div class="wrap fmb-admin-page">
+            <h1><?php echo esc_html__('Festival Medal Tracker', 'cannes-festival-medal-tracker'); ?></h1>
+
+            <?php $this->renderNotice(is_array($notice) ? $notice : []); ?>
+
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" class="fmb-upload-form">
+                <input type="hidden" name="action" value="<?php echo esc_attr(self::ACTION); ?>">
+                <?php wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD); ?>
+
+                <table class="form-table" role="presentation">
+                    <tbody>
+                        <tr>
+                            <th scope="row">
+                                <label for="fmb_medal_file"><?php echo esc_html__('Excel file', 'cannes-festival-medal-tracker'); ?></label>
+                            </th>
+                            <td>
+                                <input type="file" id="fmb_medal_file" name="fmb_medal_file" accept=".xlsx,.xls,.csv" required>
+                                <p class="description">
+                                    <?php echo esc_html__('Expected columns: location and prize.', 'cannes-festival-medal-tracker'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <?php submit_button(__('Import medals', 'cannes-festival-medal-tracker')); ?>
+            </form>
+
+            <h2><?php echo esc_html__('Current standings', 'cannes-festival-medal-tracker'); ?></h2>
+            <?php $this->renderCurrentTable($rows); ?>
+        </div>
+        <?php
+    }
+
+    private function handleUpload(): string
+    {
+        if (empty($_FILES['fmb_medal_file']) || !is_array($_FILES['fmb_medal_file'])) {
+            throw new RuntimeException(__('No file was uploaded.', 'cannes-festival-medal-tracker'));
+        }
+
+        $file = $_FILES['fmb_medal_file'];
+
+        if (!isset($file['error']) || UPLOAD_ERR_OK !== (int) $file['error']) {
+            throw new RuntimeException(__('The file upload failed.', 'cannes-festival-medal-tracker'));
+        }
+
+        $allowedMimes = [
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'xls'  => 'application/vnd.ms-excel',
+            'csv'  => 'text/csv',
+        ];
+
+        $fileType = wp_check_filetype_and_ext(
+            (string) $file['tmp_name'],
+            sanitize_file_name((string) $file['name']),
+            $allowedMimes
+        );
+
+        if (empty($fileType['ext']) || !isset($allowedMimes[$fileType['ext']])) {
+            throw new RuntimeException(__('Only XLSX, XLS or CSV files are allowed.', 'cannes-festival-medal-tracker'));
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+
+        $uploaded = wp_handle_upload(
+            $file,
+            [
+                'test_form' => false,
+                'mimes'     => $allowedMimes,
+            ]
+        );
+
+        if (!empty($uploaded['error'])) {
+            throw new RuntimeException(sanitize_text_field((string) $uploaded['error']));
+        }
+
+        return (string) $uploaded['file'];
+    }
+
+    private function renderNotice(array $notice): void
+    {
+        if (empty($notice)) {
+            return;
+        }
+
+        if (!empty($notice['error'])) {
+            ?>
+            <div class="notice notice-error is-dismissible">
+                <p><?php echo esc_html((string) $notice['error']); ?></p>
+            </div>
+            <?php
+            return;
+        }
+
+        $summary = is_array($notice['summary'] ?? null) ? $notice['summary'] : [];
+
+        if (empty($summary)) {
+            return;
+        }
+
+        ?>
+        <div class="notice notice-success is-dismissible">
+            <p>
+                <?php
+                echo esc_html(
+                    sprintf(
+                        /* translators: 1: valid rows, 2: ignored rows, 3: created countries, 4: updated countries. */
+                        __('Import complete. Valid rows: %1$d. Ignored rows: %2$d. Countries created: %3$d. Countries updated: %4$d.', 'cannes-festival-medal-tracker'),
+                        (int) $summary['valid_rows'],
+                        (int) $summary['ignored_rows'],
+                        (int) $summary['countries_created'],
+                        (int) $summary['countries_updated']
+                    )
+                );
+                ?>
+            </p>
+            <?php if (!empty($summary['errors']) && is_array($summary['errors'])) : ?>
+                <ul class="fmb-import-errors">
+                    <?php foreach (array_slice($summary['errors'], 0, 10) as $error) : ?>
+                        <li><?php echo esc_html((string) $error); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    private function renderCurrentTable(array $rows): void
+    {
+        if (empty($rows)) {
+            echo '<p>' . esc_html__('No medals have been imported yet.', 'cannes-festival-medal-tracker') . '</p>';
+            return;
+        }
+        ?>
+        <table class="widefat striped fmb-admin-standings">
+            <thead>
+                <tr>
+                    <th scope="col"><?php echo esc_html__('Country', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Gold', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Silver', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Bronze', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($rows as $row) : ?>
+                    <tr>
+                        <td><?php echo esc_html((string) $row['country']); ?></td>
+                        <td><?php echo esc_html((string) absint($row['gold'])); ?></td>
+                        <td><?php echo esc_html((string) absint($row['silver'])); ?></td>
+                        <td><?php echo esc_html((string) absint($row['bronze'])); ?></td>
+                        <td><?php echo esc_html((string) absint($row['total'])); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php
+    }
+}
