@@ -23,6 +23,7 @@ final class AdminPage
     private const RESET_ACTION = 'fmb_reset_medals';
     private const RESET_NONCE_ACTION = 'fmb_reset_medals_nonce';
     private const RESET_NONCE_FIELD = 'fmb_reset_nonce';
+    private const RESET_CONFIRMATION_PHRASE = 'reiniciar medallero';
     private const APPROVE_ACTION = 'fmb_approve_import_preview';
     private const APPROVE_NONCE_ACTION = 'fmb_approve_import_preview_nonce';
     private const APPROVE_NONCE_FIELD = 'fmb_approve_preview_nonce';
@@ -241,6 +242,24 @@ final class AdminPage
 
         check_admin_referer(self::RESET_NONCE_ACTION, self::RESET_NONCE_FIELD);
 
+        $confirmation = isset($_POST['fmb_reset_confirmation'])
+            ? sanitize_text_field(wp_unslash($_POST['fmb_reset_confirmation']))
+            : '';
+
+        if ($confirmation !== self::RESET_CONFIRMATION_PHRASE) {
+            set_transient(
+                self::TRANSIENT_PREFIX . get_current_user_id(),
+                [
+                    'summary' => [],
+                    'error'   => __('No se reinicio el medallero. Escribe exactamente "reiniciar medallero" para confirmar el borrado.', 'cannes-festival-medal-tracker'),
+                ],
+                MINUTE_IN_SECONDS * 10
+            );
+
+            wp_safe_redirect(admin_url('admin.php?page=' . self::MENU_SLUG));
+            exit;
+        }
+
         $deleted = $this->repository->deleteAll();
         delete_transient($this->previewTransientKey());
 
@@ -339,6 +358,28 @@ final class AdminPage
                 >
                     <input type="hidden" name="action" value="<?php echo esc_attr(self::RESET_ACTION); ?>">
                     <?php wp_nonce_field(self::RESET_NONCE_ACTION, self::RESET_NONCE_FIELD); ?>
+                    <p>
+                        <label for="fmb_reset_confirmation">
+                            <?php
+                            echo esc_html(
+                                sprintf(
+                                    /* translators: %s: confirmation phrase required to reset medals. */
+                                    __('Para confirmar, escribe exactamente: %s', 'cannes-festival-medal-tracker'),
+                                    self::RESET_CONFIRMATION_PHRASE
+                                )
+                            );
+                            ?>
+                        </label>
+                        <input
+                            type="text"
+                            id="fmb_reset_confirmation"
+                            name="fmb_reset_confirmation"
+                            class="regular-text"
+                            autocomplete="off"
+                            required
+                            pattern="<?php echo esc_attr(self::RESET_CONFIRMATION_PHRASE); ?>"
+                        >
+                    </p>
                     <?php submit_button(__('Reiniciar medallero', 'cannes-festival-medal-tracker'), 'delete', 'submit', false); ?>
                 </form>
             </div>

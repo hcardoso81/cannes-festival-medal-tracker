@@ -107,7 +107,7 @@ After reviewing the preview, use **Approve and continue** to merge the detected 
 
 Approved imports are listed in **Registro de importaciones** with the uploaded filename, approval date, valid rows, ignored rows and country create/update counts. Discarded previews are not added to this history.
 
-The admin page also includes a reset action to delete all medal rows from the plugin table. The reset requires `manage_options`, a nonce and a browser confirmation.
+The admin page also includes a reset action to delete all medal rows from the plugin table. The reset requires `manage_options`, a nonce, a browser confirmation and typing the exact confirmation phrase `reiniciar medallero`.
 
 ## Shortcodes
 
