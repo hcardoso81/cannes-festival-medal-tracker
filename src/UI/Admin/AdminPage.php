@@ -557,39 +557,6 @@ final class AdminPage
                     <?php echo esc_html((string) $summary['source_file']); ?>
                 </p>
             <?php endif; ?>
-            <?php if (!empty($summary['processed_details']) && is_array($summary['processed_details'])) : ?>
-                <?php $this->renderProcessedRowsAccordion($summary); ?>
-            <?php elseif (!empty($summary['errors']) && is_array($summary['errors'])) : ?>
-                <details class="fmb-accordion">
-                    <summary>
-                        <?php
-                        echo esc_html(
-                            sprintf(
-                                /* translators: %d: ignored rows. */
-                                __('Filas ignoradas: %d. Ver detalle.', 'cannes-festival-medal-tracker'),
-                                (int) ($summary['ignored_rows'] ?? count($summary['errors']))
-                            )
-                        );
-                        ?>
-                    </summary>
-                    <ul class="fmb-import-errors">
-                        <?php foreach ($summary['errors'] as $error) : ?>
-                            <li><?php echo esc_html((string) $error); ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <p>
-                        <?php
-                        echo esc_html(
-                            sprintf(
-                                /* translators: %s: plugin log path. */
-                                __('El detalle completo de filas ignoradas tambien se escribio en %s.', 'cannes-festival-medal-tracker'),
-                                'logs/fmb-error.log'
-                            )
-                        );
-                        ?>
-                    </p>
-                </details>
-            <?php endif; ?>
         </div>
         <?php
     }
