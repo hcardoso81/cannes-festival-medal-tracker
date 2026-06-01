@@ -83,6 +83,27 @@ final class AdminPage
             [],
             FMB_VERSION
         );
+
+        wp_register_script('fmb-admin-upload', '', [], FMB_VERSION, true);
+        wp_enqueue_script('fmb-admin-upload');
+        wp_add_inline_script(
+            'fmb-admin-upload',
+            "document.addEventListener('DOMContentLoaded', function () {
+                var fileInput = document.getElementById('fmb_medal_file');
+                var submitButton = document.getElementById('fmb_generate_preview');
+
+                if (!fileInput || !submitButton) {
+                    return;
+                }
+
+                var toggleSubmit = function () {
+                    submitButton.disabled = !fileInput.files || fileInput.files.length === 0;
+                };
+
+                toggleSubmit();
+                fileInput.addEventListener('change', toggleSubmit);
+            });"
+        );
     }
 
     public function handleImport(): void
@@ -326,7 +347,18 @@ final class AdminPage
                     </tbody>
                 </table>
 
-                <?php submit_button(__('Generar vista previa', 'cannes-festival-medal-tracker')); ?>
+                <?php
+                submit_button(
+                    __('Generar vista previa', 'cannes-festival-medal-tracker'),
+                    'primary',
+                    'submit',
+                    true,
+                    [
+                        'id'       => 'fmb_generate_preview',
+                        'disabled' => 'disabled',
+                    ]
+                );
+                ?>
             </form>
 
             <?php $this->renderPendingPreview(is_array($preview) ? $preview : []); ?>
@@ -664,12 +696,13 @@ final class AdminPage
                 <tbody>
                     <?php foreach ($processedRows as $row) : ?>
                         <?php
-                        $status = 'valid' === (string) ($row['status'] ?? '')
+                        $rowStatus = (string) ($row['status'] ?? '');
+                        $status = 'valid' === $rowStatus
                             ? __('Procesada', 'cannes-festival-medal-tracker')
                             : __('Ignorada', 'cannes-festival-medal-tracker');
                         $detail = $this->formatProcessedRowDetail($row);
                         ?>
-                        <tr>
+                        <tr class="<?php echo esc_attr('valid' === $rowStatus ? 'fmb-row-valid' : 'fmb-row-ignored'); ?>">
                             <td><?php echo esc_html((string) absint($row['row'] ?? 0)); ?></td>
                             <td><?php echo esc_html($status); ?></td>
                             <td><?php echo esc_html((string) ($row['raw_location'] ?? '')); ?></td>

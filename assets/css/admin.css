@@ -43,6 +43,11 @@
     vertical-align: middle;
 }
 
+.fmb-processed-rows tr.fmb-row-valid td {
+    color: #008a20;
+    font-weight: 600;
+}
+
 .fmb-counting-rules {
     max-width: 1040px;
     margin: 1rem 0 2rem;
