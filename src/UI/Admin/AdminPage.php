@@ -557,23 +557,38 @@ final class AdminPage
                     <?php echo esc_html((string) $summary['source_file']); ?>
                 </p>
             <?php endif; ?>
-            <?php if (!empty($summary['errors']) && is_array($summary['errors'])) : ?>
-                <ul class="fmb-import-errors">
-                    <?php foreach ($summary['errors'] as $error) : ?>
-                        <li><?php echo esc_html((string) $error); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-                <p>
-                    <?php
-                    echo esc_html(
-                        sprintf(
-                            /* translators: %s: plugin log path. */
-                            __('El detalle completo de filas ignoradas tambien se escribio en %s.', 'cannes-festival-medal-tracker'),
-                            'logs/fmb-error.log'
-                        )
-                    );
-                    ?>
-                </p>
+            <?php if (!empty($summary['processed_details']) && is_array($summary['processed_details'])) : ?>
+                <?php $this->renderProcessedRowsAccordion($summary); ?>
+            <?php elseif (!empty($summary['errors']) && is_array($summary['errors'])) : ?>
+                <details class="fmb-accordion">
+                    <summary>
+                        <?php
+                        echo esc_html(
+                            sprintf(
+                                /* translators: %d: ignored rows. */
+                                __('Filas ignoradas: %d. Ver detalle.', 'cannes-festival-medal-tracker'),
+                                (int) ($summary['ignored_rows'] ?? count($summary['errors']))
+                            )
+                        );
+                        ?>
+                    </summary>
+                    <ul class="fmb-import-errors">
+                        <?php foreach ($summary['errors'] as $error) : ?>
+                            <li><?php echo esc_html((string) $error); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <p>
+                        <?php
+                        echo esc_html(
+                            sprintf(
+                                /* translators: %s: plugin log path. */
+                                __('El detalle completo de filas ignoradas tambien se escribio en %s.', 'cannes-festival-medal-tracker'),
+                                'logs/fmb-error.log'
+                            )
+                        );
+                        ?>
+                    </p>
+                </details>
             <?php endif; ?>
         </div>
         <?php
@@ -606,40 +621,22 @@ final class AdminPage
                 );
                 ?>
             </p>
-            <table class="widefat striped fmb-admin-standings">
-                <thead>
-                    <tr>
-                        <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Accion en base de datos', 'cannes-festival-medal-tracker'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($preview['imported'] as $item) : ?>
-                        <?php
-                        $country = (string) ($item['country'] ?? '');
-                        $medals  = is_array($item['medals'] ?? null) ? $item['medals'] : [];
-                        $total   = absint($medals['gp'] ?? 0) + absint($medals['gold'] ?? 0) + absint($medals['silver'] ?? 0) + absint($medals['bronze'] ?? 0);
-                        $action  = null === $this->repository->findByCountry($country)
-                            ? __('Crear', 'cannes-festival-medal-tracker')
-                            : __('Actualizar', 'cannes-festival-medal-tracker');
-                        ?>
-                        <tr>
-                            <td><?php echo esc_html($country); ?></td>
-                            <td><?php echo esc_html((string) absint($medals['gp'] ?? 0)); ?></td>
-                            <td><?php echo esc_html((string) absint($medals['gold'] ?? 0)); ?></td>
-                            <td><?php echo esc_html((string) absint($medals['silver'] ?? 0)); ?></td>
-                            <td><?php echo esc_html((string) absint($medals['bronze'] ?? 0)); ?></td>
-                            <td><?php echo esc_html((string) $total); ?></td>
-                            <td><?php echo esc_html($action); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <?php $this->renderProcessedRowsAccordion($preview); ?>
+            <details class="fmb-accordion" open>
+                <summary>
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: 1: country count, 2: valid rows. */
+                            __('Medallas detectadas: %1$d paises con %2$d filas validas. Ver detalle.', 'cannes-festival-medal-tracker'),
+                            count($preview['imported']),
+                            (int) ($preview['valid_rows'] ?? 0)
+                        )
+                    );
+                    ?>
+                </summary>
+                <?php $this->renderPreviewMedalsTable($preview['imported']); ?>
+            </details>
             <div class="fmb-preview-actions">
                 <form
                     method="post"
@@ -661,6 +658,122 @@ final class AdminPage
                 </form>
             </div>
         </div>
+        <?php
+    }
+
+    private function renderProcessedRowsAccordion(array $summary): void
+    {
+        $processedRows = is_array($summary['processed_details'] ?? null) ? $summary['processed_details'] : [];
+
+        if (empty($processedRows)) {
+            return;
+        }
+
+        ?>
+        <details class="fmb-accordion">
+            <summary>
+                <?php
+                echo esc_html(
+                    sprintf(
+                        /* translators: 1: total rows, 2: valid rows, 3: ignored rows. */
+                        __('Filas procesadas: %1$d. Validas: %2$d. Ignoradas: %3$d. Ver detalle.', 'cannes-festival-medal-tracker'),
+                        (int) ($summary['total_rows'] ?? count($processedRows)),
+                        (int) ($summary['valid_rows'] ?? 0),
+                        (int) ($summary['ignored_rows'] ?? 0)
+                    )
+                );
+                ?>
+            </summary>
+            <table class="widefat striped fmb-processed-rows">
+                <thead>
+                    <tr>
+                        <th scope="col"><?php echo esc_html__('Fila', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Estado', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Location', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Prize', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Detalle', 'cannes-festival-medal-tracker'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($processedRows as $row) : ?>
+                        <?php
+                        $status = 'valid' === (string) ($row['status'] ?? '')
+                            ? __('Procesada', 'cannes-festival-medal-tracker')
+                            : __('Ignorada', 'cannes-festival-medal-tracker');
+                        $countries = is_array($row['countries'] ?? null) ? $row['countries'] : [];
+                        $detail = 'valid' === (string) ($row['status'] ?? '')
+                            ? sprintf(
+                                /* translators: 1: medal key, 2: country list. */
+                                __('Medalla: %1$s. Paises: %2$s.', 'cannes-festival-medal-tracker'),
+                                (string) ($row['medal'] ?? ''),
+                                implode(', ', array_map('strval', $countries))
+                            )
+                            : (string) ($row['reason'] ?? '');
+                        ?>
+                        <tr>
+                            <td><?php echo esc_html((string) absint($row['row'] ?? 0)); ?></td>
+                            <td><?php echo esc_html($status); ?></td>
+                            <td><?php echo esc_html((string) ($row['raw_location'] ?? '')); ?></td>
+                            <td><?php echo esc_html((string) ($row['raw_prize'] ?? '')); ?></td>
+                            <td><?php echo esc_html($detail); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php if (!empty($summary['ignored_rows'])) : ?>
+                <p>
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: %s: plugin log path. */
+                            __('El detalle completo de filas ignoradas tambien se escribio en %s.', 'cannes-festival-medal-tracker'),
+                            'logs/fmb-error.log'
+                        )
+                    );
+                    ?>
+                </p>
+            <?php endif; ?>
+        </details>
+        <?php
+    }
+
+    private function renderPreviewMedalsTable(array $items): void
+    {
+        ?>
+        <table class="widefat striped fmb-admin-standings">
+            <thead>
+                <tr>
+                    <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Accion en base de datos', 'cannes-festival-medal-tracker'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($items as $item) : ?>
+                    <?php
+                    $country = (string) ($item['country'] ?? '');
+                    $medals  = is_array($item['medals'] ?? null) ? $item['medals'] : [];
+                    $total   = absint($medals['gp'] ?? 0) + absint($medals['gold'] ?? 0) + absint($medals['silver'] ?? 0) + absint($medals['bronze'] ?? 0);
+                    $action  = null === $this->repository->findByCountry($country)
+                        ? __('Crear', 'cannes-festival-medal-tracker')
+                        : __('Actualizar', 'cannes-festival-medal-tracker');
+                    ?>
+                    <tr>
+                        <td><?php echo esc_html($country); ?></td>
+                        <td><?php echo esc_html((string) absint($medals['gp'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($medals['gold'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($medals['silver'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($medals['bronze'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) $total); ?></td>
+                        <td><?php echo esc_html($action); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
         <?php
     }
 
@@ -708,30 +821,43 @@ final class AdminPage
             return;
         endif;
         ?>
-        <table class="widefat striped fmb-import-log">
-            <thead>
-                <tr>
-                    <th scope="col"><?php echo esc_html__('Fecha', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Archivo importado', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Filas validas', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Filas ignoradas', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Paises creados', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Paises actualizados', 'cannes-festival-medal-tracker'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($entries as $entry) : ?>
+        <details class="fmb-accordion">
+            <summary>
+                <?php
+                echo esc_html(
+                    sprintf(
+                        /* translators: %d: processed import files. */
+                        __('Archivos procesados: %d. Ver detalle.', 'cannes-festival-medal-tracker'),
+                        count($entries)
+                    )
+                );
+                ?>
+            </summary>
+            <table class="widefat striped fmb-import-log">
+                <thead>
                     <tr>
-                        <td><?php echo esc_html((string) ($entry['imported_at'] ?? '')); ?></td>
-                        <td><?php echo esc_html((string) ($entry['source_file'] ?? '')); ?></td>
-                        <td><?php echo esc_html((string) absint($entry['valid_rows'] ?? 0)); ?></td>
-                        <td><?php echo esc_html((string) absint($entry['ignored_rows'] ?? 0)); ?></td>
-                        <td><?php echo esc_html((string) absint($entry['countries_created'] ?? 0)); ?></td>
-                        <td><?php echo esc_html((string) absint($entry['countries_updated'] ?? 0)); ?></td>
+                        <th scope="col"><?php echo esc_html__('Fecha', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Archivo importado', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Filas validas', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Filas ignoradas', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Paises creados', 'cannes-festival-medal-tracker'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Paises actualizados', 'cannes-festival-medal-tracker'); ?></th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($entries as $entry) : ?>
+                        <tr>
+                            <td><?php echo esc_html((string) ($entry['imported_at'] ?? '')); ?></td>
+                            <td><?php echo esc_html((string) ($entry['source_file'] ?? '')); ?></td>
+                            <td><?php echo esc_html((string) absint($entry['valid_rows'] ?? 0)); ?></td>
+                            <td><?php echo esc_html((string) absint($entry['ignored_rows'] ?? 0)); ?></td>
+                            <td><?php echo esc_html((string) absint($entry['countries_created'] ?? 0)); ?></td>
+                            <td><?php echo esc_html((string) absint($entry['countries_updated'] ?? 0)); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </details>
         <?php
     }
 

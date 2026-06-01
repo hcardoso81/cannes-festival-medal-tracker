@@ -41,6 +41,7 @@ final class ImportMedalsUseCase
             'countries_updated' => 0,
             'errors'            => [],
             'ignored_details'   => [],
+            'processed_details' => [],
             'imported'          => [],
             'preview'           => true,
         ];
@@ -78,6 +79,15 @@ final class ImportMedalsUseCase
                     'raw_prize'    => $this->cleanCellForSummary($rawPrize),
                     'reason'       => $reason,
                 ];
+                $summary['processed_details'][] = [
+                    'row'          => $rowNumber,
+                    'raw_location' => $this->cleanCellForSummary($rawLocation),
+                    'raw_prize'    => $this->cleanCellForSummary($rawPrize),
+                    'status'       => 'ignored',
+                    'reason'       => $reason,
+                    'countries'    => [],
+                    'medal'        => '',
+                ];
                 continue;
             }
 
@@ -89,6 +99,15 @@ final class ImportMedalsUseCase
                 $accumulator[$country][$medal]++;
             }
             $summary['valid_rows']++;
+            $summary['processed_details'][] = [
+                'row'          => $rowNumber,
+                'raw_location' => $this->cleanCellForSummary($rawLocation),
+                'raw_prize'    => $this->cleanCellForSummary($rawPrize),
+                'status'       => 'valid',
+                'reason'       => '',
+                'countries'    => array_values($countries),
+                'medal'        => $medal,
+            ];
         }
 
         foreach ($accumulator as $country => $medals) {
