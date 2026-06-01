@@ -51,16 +51,16 @@ final class ImportMedalsUseCase
             $rawLocation = (string) ($row['location'] ?? '');
             $rawPrize    = (string) ($row['prize'] ?? '');
             $rowNumber   = !empty($row['row_number']) ? (int) $row['row_number'] : $index + 2;
-            $country     = $this->normalizer->normalizeCountry($rawLocation);
+            $countries   = $this->normalizer->normalizeAllowedCountries($rawLocation);
             $medal       = $this->normalizer->normalizePrize($rawPrize);
 
-            if ('' === $country || null === $medal || !$this->normalizer->isAllowedCountry($country)) {
-                if ('' === $country) {
+            if (empty($countries) || null === $medal) {
+                if ('' === $this->normalizer->normalizeCountry($rawLocation)) {
                     $reason = __('missing or invalid location', 'cannes-festival-medal-tracker');
                 } elseif (null === $medal) {
                     $reason = __('unrecognized prize', 'cannes-festival-medal-tracker');
                 } else {
-                    $reason = __('country is not in the allowed list', 'cannes-festival-medal-tracker');
+                    $reason = __('no country in the location is in the allowed list', 'cannes-festival-medal-tracker');
                 }
 
                 $summary['ignored_rows']++;
@@ -81,11 +81,13 @@ final class ImportMedalsUseCase
                 continue;
             }
 
-            if (!isset($accumulator[$country])) {
-                $accumulator[$country] = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0];
-            }
+            foreach ($countries as $country) {
+                if (!isset($accumulator[$country])) {
+                    $accumulator[$country] = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0];
+                }
 
-            $accumulator[$country][$medal]++;
+                $accumulator[$country][$medal]++;
+            }
             $summary['valid_rows']++;
         }
 

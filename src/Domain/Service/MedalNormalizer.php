@@ -43,6 +43,28 @@ final class MedalNormalizer
             : ucwords(strtolower($country));
     }
 
+    public function normalizeAllowedCountries(string $location): array
+    {
+        $countries = [];
+        $parts     = preg_split('/\s*\/\s*/', $location) ?: [];
+
+        foreach ($parts as $part) {
+            $country = $this->normalizeCountry((string) $part);
+
+            if ('' === $country || !$this->isAllowedCountry($country)) {
+                continue;
+            }
+
+            $countryKey = $this->countryKey($country);
+
+            if (!isset($countries[$countryKey])) {
+                $countries[$countryKey] = $country;
+            }
+        }
+
+        return array_values($countries);
+    }
+
     public function normalizePrize(string $prize): ?string
     {
         $prize = $this->normalizePrizeValue($prize);
