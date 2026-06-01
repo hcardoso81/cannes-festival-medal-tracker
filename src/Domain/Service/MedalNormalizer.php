@@ -56,24 +56,44 @@ final class MedalNormalizer
 
     public function normalizeAllowedCountries(string $location): array
     {
-        $countries = [];
-        $parts     = preg_split('/\s*\/\s*/', $location) ?: [];
-        $allowed   = $this->getAllowedCountryMap();
+        $analysis = $this->analyzeLocationCountries($location);
+
+        return $analysis['counted'];
+    }
+
+    public function analyzeLocationCountries(string $location): array
+    {
+        $counted = [];
+        $ignored = [];
+        $parts   = preg_split('/\s*\/\s*/', $location) ?: [];
+        $allowed = $this->getAllowedCountryMap();
 
         foreach ($parts as $part) {
             $country = $this->normalizeCountry((string) $part);
             $countryKey = $this->countryKey($country);
 
-            if ('' === $country || !isset($allowed[$countryKey])) {
+            if ('' === $country) {
                 continue;
             }
 
-            if (!isset($countries[$countryKey])) {
-                $countries[$countryKey] = $allowed[$countryKey];
+            if (isset($allowed[$countryKey])) {
+                if (!isset($counted[$countryKey])) {
+                    $counted[$countryKey] = $allowed[$countryKey];
+                }
+
+                continue;
+            }
+
+            if (!isset($ignored[$countryKey])) {
+                $ignored[$countryKey] = $country;
             }
         }
 
-        return array_values($countries);
+        return [
+            'counted'            => array_values($counted),
+            'ignored'            => array_values($ignored),
+            'has_multiple_parts' => count(array_filter($parts, static fn ($part): bool => '' !== trim((string) $part))) > 1,
+        ];
     }
 
     public function normalizePrize(string $prize): ?string

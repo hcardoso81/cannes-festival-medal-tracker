@@ -52,8 +52,9 @@ final class ImportMedalsUseCase
             $rawLocation = (string) ($row['location'] ?? '');
             $rawPrize    = (string) ($row['prize'] ?? '');
             $rowNumber   = !empty($row['row_number']) ? (int) $row['row_number'] : $index + 2;
-            $countries   = $this->normalizer->normalizeAllowedCountries($rawLocation);
-            $medal       = $this->normalizer->normalizePrize($rawPrize);
+            $countryAnalysis = $this->normalizer->analyzeLocationCountries($rawLocation);
+            $countries       = $countryAnalysis['counted'];
+            $medal           = $this->normalizer->normalizePrize($rawPrize);
 
             if (empty($countries) || null === $medal) {
                 if ('' === $this->normalizer->normalizeCountry($rawLocation)) {
@@ -80,13 +81,15 @@ final class ImportMedalsUseCase
                     'reason'       => $reason,
                 ];
                 $summary['processed_details'][] = [
-                    'row'          => $rowNumber,
-                    'raw_location' => $this->cleanCellForSummary($rawLocation),
-                    'raw_prize'    => $this->cleanCellForSummary($rawPrize),
-                    'status'       => 'ignored',
-                    'reason'       => $reason,
-                    'countries'    => [],
-                    'medal'        => '',
+                    'row'                    => $rowNumber,
+                    'raw_location'           => $this->cleanCellForSummary($rawLocation),
+                    'raw_prize'              => $this->cleanCellForSummary($rawPrize),
+                    'status'                 => 'ignored',
+                    'reason'                 => $reason,
+                    'countries'              => array_values($countries),
+                    'ignored_countries'      => $countryAnalysis['ignored'],
+                    'has_multiple_countries' => $countryAnalysis['has_multiple_parts'],
+                    'medal'                  => '',
                 ];
                 continue;
             }
@@ -100,13 +103,15 @@ final class ImportMedalsUseCase
             }
             $summary['valid_rows']++;
             $summary['processed_details'][] = [
-                'row'          => $rowNumber,
-                'raw_location' => $this->cleanCellForSummary($rawLocation),
-                'raw_prize'    => $this->cleanCellForSummary($rawPrize),
-                'status'       => 'valid',
-                'reason'       => '',
-                'countries'    => array_values($countries),
-                'medal'        => $medal,
+                'row'                    => $rowNumber,
+                'raw_location'           => $this->cleanCellForSummary($rawLocation),
+                'raw_prize'              => $this->cleanCellForSummary($rawPrize),
+                'status'                 => 'valid',
+                'reason'                 => '',
+                'countries'              => array_values($countries),
+                'ignored_countries'      => $countryAnalysis['ignored'],
+                'has_multiple_countries' => $countryAnalysis['has_multiple_parts'],
+                'medal'                  => $medal,
             ];
         }
 

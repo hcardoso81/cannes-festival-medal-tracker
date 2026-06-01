@@ -700,15 +700,7 @@ final class AdminPage
                         $status = 'valid' === (string) ($row['status'] ?? '')
                             ? __('Procesada', 'cannes-festival-medal-tracker')
                             : __('Ignorada', 'cannes-festival-medal-tracker');
-                        $countries = is_array($row['countries'] ?? null) ? $row['countries'] : [];
-                        $detail = 'valid' === (string) ($row['status'] ?? '')
-                            ? sprintf(
-                                /* translators: 1: medal key, 2: country list. */
-                                __('Medalla: %1$s. Paises: %2$s.', 'cannes-festival-medal-tracker'),
-                                (string) ($row['medal'] ?? ''),
-                                implode(', ', array_map('strval', $countries))
-                            )
-                            : (string) ($row['reason'] ?? '');
+                        $detail = $this->formatProcessedRowDetail($row);
                         ?>
                         <tr>
                             <td><?php echo esc_html((string) absint($row['row'] ?? 0)); ?></td>
@@ -735,6 +727,50 @@ final class AdminPage
             <?php endif; ?>
         </details>
         <?php
+    }
+
+    private function formatProcessedRowDetail(array $row): string
+    {
+        $status = (string) ($row['status'] ?? '');
+        $countedCountries = is_array($row['countries'] ?? null) ? array_map('strval', $row['countries']) : [];
+        $ignoredCountries = is_array($row['ignored_countries'] ?? null) ? array_map('strval', $row['ignored_countries']) : [];
+        $parts = [];
+
+        if ('valid' === $status) {
+            $parts[] = sprintf(
+                /* translators: %s: medal key. */
+                __('Medalla: %s.', 'cannes-festival-medal-tracker'),
+                (string) ($row['medal'] ?? '')
+            );
+
+            if (!empty($countedCountries)) {
+                $parts[] = sprintf(
+                    /* translators: %s: counted country list. */
+                    __('Contabilice: %s.', 'cannes-festival-medal-tracker'),
+                    implode(', ', $countedCountries)
+                );
+            }
+        } else {
+            $parts[] = (string) ($row['reason'] ?? '');
+
+            if (!empty($countedCountries)) {
+                $parts[] = sprintf(
+                    /* translators: %s: allowed country list detected in ignored row. */
+                    __('Paises permitidos detectados: %s.', 'cannes-festival-medal-tracker'),
+                    implode(', ', $countedCountries)
+                );
+            }
+        }
+
+        if (!empty($ignoredCountries)) {
+            $parts[] = sprintf(
+                /* translators: %s: ignored country list. */
+                __('Ignore: %s.', 'cannes-festival-medal-tracker'),
+                implode(', ', $ignoredCountries)
+            );
+        }
+
+        return implode(' ', array_filter($parts));
     }
 
     private function renderPreviewMedalsTable(array $items): void
