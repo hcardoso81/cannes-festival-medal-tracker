@@ -31,6 +31,8 @@ final class AdminPage
     private const DISCARD_NONCE_FIELD = 'fmb_discard_preview_nonce';
     private const TRANSIENT_PREFIX = 'fmb_import_summary_';
     private const PREVIEW_TRANSIENT_PREFIX = 'fmb_import_preview_';
+    private const IMPORT_LOG_OPTION = 'fmb_import_log';
+    private const IMPORT_LOG_LIMIT = 100;
 
     private ImportMedalsUseCase $importer;
 
@@ -198,12 +200,14 @@ final class AdminPage
                     'Import preview approved and persisted.',
                     [
                         'user_id'           => get_current_user_id(),
+                        'source_file'       => (string) ($summary['source_file'] ?? ''),
                         'valid_rows'        => (int) ($summary['valid_rows'] ?? 0),
                         'ignored_rows'      => (int) ($summary['ignored_rows'] ?? 0),
                         'countries_created' => (int) ($summary['countries_created'] ?? 0),
                         'countries_updated' => (int) ($summary['countries_updated'] ?? 0),
                     ]
                 );
+                $this->appendImportLog($summary);
             } catch (Throwable $throwable) {
                 $this->logger->exception(
                     $throwable,
@@ -274,6 +278,7 @@ final class AdminPage
         delete_transient(self::TRANSIENT_PREFIX . get_current_user_id());
         $preview = get_transient($this->previewTransientKey());
         $rows = $this->repository->getCountryDetails();
+        $importLog = $this->getImportLog();
         ?>
         <div class="wrap fmb-admin-page">
             <h1><?php echo esc_html__('Medallero del Festival', 'cannes-festival-medal-tracker'); ?></h1>
@@ -321,6 +326,8 @@ final class AdminPage
 
             <h2><?php echo esc_html__('Medallero actual', 'cannes-festival-medal-tracker'); ?></h2>
             <?php $this->renderCurrentTable($rows); ?>
+
+            <?php $this->renderImportLog($importLog); ?>
 
             <div class="fmb-danger-zone">
                 <h2><?php echo esc_html__('Reiniciar medallero', 'cannes-festival-medal-tracker'); ?></h2>
@@ -503,6 +510,12 @@ final class AdminPage
                 }
                 ?>
             </p>
+            <?php if (!empty($summary['source_file'])) : ?>
+                <p>
+                    <strong><?php echo esc_html__('Archivo:', 'cannes-festival-medal-tracker'); ?></strong>
+                    <?php echo esc_html((string) $summary['source_file']); ?>
+                </p>
+            <?php endif; ?>
             <?php if (!empty($summary['errors']) && is_array($summary['errors'])) : ?>
                 <ul class="fmb-import-errors">
                     <?php foreach ($summary['errors'] as $error) : ?>
@@ -642,6 +655,80 @@ final class AdminPage
             </tbody>
         </table>
         <?php
+    }
+
+    private function renderImportLog(array $entries): void
+    {
+        ?>
+        <h2><?php echo esc_html__('Registro de importaciones', 'cannes-festival-medal-tracker'); ?></h2>
+        <?php if (empty($entries)) : ?>
+            <p><?php echo esc_html__('Todavia no hay importaciones aprobadas.', 'cannes-festival-medal-tracker'); ?></p>
+            <?php
+            return;
+        endif;
+        ?>
+        <table class="widefat striped fmb-import-log">
+            <thead>
+                <tr>
+                    <th scope="col"><?php echo esc_html__('Fecha', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Archivo importado', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Filas validas', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Filas ignoradas', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Paises creados', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Paises actualizados', 'cannes-festival-medal-tracker'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($entries as $entry) : ?>
+                    <tr>
+                        <td><?php echo esc_html((string) ($entry['imported_at'] ?? '')); ?></td>
+                        <td><?php echo esc_html((string) ($entry['source_file'] ?? '')); ?></td>
+                        <td><?php echo esc_html((string) absint($entry['valid_rows'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($entry['ignored_rows'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($entry['countries_created'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($entry['countries_updated'] ?? 0)); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php
+    }
+
+    private function appendImportLog(array $summary): void
+    {
+        $entries = $this->getImportLog();
+        array_unshift(
+            $entries,
+            [
+                'imported_at'       => current_time('mysql'),
+                'source_file'       => sanitize_file_name((string) ($summary['source_file'] ?? '')),
+                'valid_rows'        => absint($summary['valid_rows'] ?? 0),
+                'ignored_rows'      => absint($summary['ignored_rows'] ?? 0),
+                'countries_created' => absint($summary['countries_created'] ?? 0),
+                'countries_updated' => absint($summary['countries_updated'] ?? 0),
+                'user_id'           => get_current_user_id(),
+            ]
+        );
+
+        update_option(self::IMPORT_LOG_OPTION, array_slice($entries, 0, self::IMPORT_LOG_LIMIT), false);
+    }
+
+    private function getImportLog(): array
+    {
+        $entries = get_option(self::IMPORT_LOG_OPTION, []);
+
+        if (!is_array($entries)) {
+            return [];
+        }
+
+        return array_values(
+            array_filter(
+                $entries,
+                static function ($entry): bool {
+                    return is_array($entry);
+                }
+            )
+        );
     }
 
     private function logIgnoredRows(?array $summary): void

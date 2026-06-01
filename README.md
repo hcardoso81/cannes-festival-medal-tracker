@@ -105,6 +105,8 @@ The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or 
 
 After reviewing the preview, use **Approve and continue** to merge the detected medals into the database. Existing countries are incremented; new countries are inserted. You can also discard the pending preview without changing the database. Approval and discard actions require a nonce, `manage_options` and browser confirmation.
 
+Approved imports are listed in **Registro de importaciones** with the uploaded filename, approval date, valid rows, ignored rows and country create/update counts. Discarded previews are not added to this history.
+
 The admin page also includes a reset action to delete all medal rows from the plugin table. The reset requires `manage_options`, a nonce and a browser confirmation.
 
 ## Shortcodes
