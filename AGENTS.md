@@ -84,17 +84,28 @@ Extend synonyms with the `fmb_prize_synonyms` filter instead of editing import l
 
 ## Allowed Countries
 
-Only the configured LATAM country allowlist is counted:
+Only the configured Hispanoamerica country allowlist is counted:
 
-- `PERU`
-- `COLOMBIA`
-- `PUERTO RICO`
-- `ECUADOR`
-- `CHILE`
-- `MEXICO`
-- `COSTA RICA`
 - `ARGENTINA`
+- `BOLIVIA`
+- `CHILE`
+- `COLOMBIA`
+- `COSTA RICA`
+- `CUBA`
+- `REPÚBLICA DOMINICANA`
+- `ECUADOR`
+- `EL SALVADOR`
+- `GUATEMALA`
+- `HAITÍ`
 - `HONDURAS`
+- `MÉXICO`
+- `NICARAGUA`
+- `PANAMÁ`
+- `PARAGUAY`
+- `PERÚ`
+- `PUERTO RICO`
+- `URUGUAY`
+- `VENEZUELA`
 
 Brazil and all other countries are ignored. Country matching is case-insensitive and accent-insensitive. Extend or replace the list with the `fmb_allowed_countries` filter. The admin page must display the current counted countries and prize values before import.
 

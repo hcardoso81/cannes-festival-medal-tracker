@@ -51,17 +51,28 @@ Rows with empty countries or unrecognized prizes are ignored and reported in the
 The header row can use different casing, such as `Location` and `Prize`, and may appear after an initial title row.
 Ignored rows include the spreadsheet row number, original `location`, original `prize` and the reason. The same details are written to `logs/fmb-error.log`.
 
-Only these countries are counted:
+Only these Hispanoamerica countries are counted:
 
-- `PERU`
-- `COLOMBIA`
-- `PUERTO RICO`
-- `ECUADOR`
-- `CHILE`
-- `MEXICO`
-- `COSTA RICA`
 - `ARGENTINA`
+- `BOLIVIA`
+- `CHILE`
+- `COLOMBIA`
+- `COSTA RICA`
+- `CUBA`
+- `REPÚBLICA DOMINICANA`
+- `ECUADOR`
+- `EL SALVADOR`
+- `GUATEMALA`
+- `HAITÍ`
 - `HONDURAS`
+- `MÉXICO`
+- `NICARAGUA`
+- `PANAMÁ`
+- `PARAGUAY`
+- `PERÚ`
+- `PUERTO RICO`
+- `URUGUAY`
+- `VENEZUELA`
 
 Other countries, including Brazil, are ignored and listed in the import summary/log.
 

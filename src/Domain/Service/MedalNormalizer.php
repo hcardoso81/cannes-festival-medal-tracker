@@ -11,15 +11,26 @@ if (!defined('ABSPATH')) {
 final class MedalNormalizer
 {
     private const DEFAULT_ALLOWED_COUNTRIES = [
-        'PERU',
-        'COLOMBIA',
-        'PUERTO RICO',
-        'ECUADOR',
-        'CHILE',
-        'MEXICO',
-        'COSTA RICA',
         'ARGENTINA',
+        'BOLIVIA',
+        'CHILE',
+        'COLOMBIA',
+        'COSTA RICA',
+        'CUBA',
+        'REPÚBLICA DOMINICANA',
+        'ECUADOR',
+        'EL SALVADOR',
+        'GUATEMALA',
+        'HAITÍ',
         'HONDURAS',
+        'MÉXICO',
+        'NICARAGUA',
+        'PANAMÁ',
+        'PARAGUAY',
+        'PERÚ',
+        'PUERTO RICO',
+        'URUGUAY',
+        'VENEZUELA',
     ];
 
     private const DEFAULT_PRIZE_SYNONYMS = [
@@ -47,18 +58,18 @@ final class MedalNormalizer
     {
         $countries = [];
         $parts     = preg_split('/\s*\/\s*/', $location) ?: [];
+        $allowed   = $this->getAllowedCountryMap();
 
         foreach ($parts as $part) {
             $country = $this->normalizeCountry((string) $part);
+            $countryKey = $this->countryKey($country);
 
-            if ('' === $country || !$this->isAllowedCountry($country)) {
+            if ('' === $country || !isset($allowed[$countryKey])) {
                 continue;
             }
 
-            $countryKey = $this->countryKey($country);
-
             if (!isset($countries[$countryKey])) {
-                $countries[$countryKey] = $country;
+                $countries[$countryKey] = $allowed[$countryKey];
             }
         }
 
@@ -115,6 +126,22 @@ final class MedalNormalizer
         $filtered = apply_filters('fmb_prize_synonyms', $synonyms);
 
         return is_array($filtered) ? $filtered : $synonyms;
+    }
+
+    private function getAllowedCountryMap(): array
+    {
+        $countries = [];
+
+        foreach ($this->getAllowedCountries() as $country) {
+            $country = $this->normalizeCountry((string) $country);
+            $key     = $this->countryKey($country);
+
+            if ('' !== $key && !isset($countries[$key])) {
+                $countries[$key] = $country;
+            }
+        }
+
+        return $countries;
     }
 
     private function normalizePrizeValue(string $prize): string
