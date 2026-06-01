@@ -50,11 +50,20 @@ Imports are handled through `admin-post.php` with action `fmb_import_medals`. Th
 12. Record approved imports in a persistent admin import log with source filename, approval date and summary counts.
 13. Allow pending previews to be discarded with `fmb_discard_import_preview`, capability, nonce and browser-confirmed POST.
 
-Ignored rows must keep enough debug context: spreadsheet row number, raw `location`, raw `prize` and reason. Show sanitized details in the admin notice and write the structured list to `logs/fmb-error.log`.
+The upload form must keep **Generar vista previa** disabled until a file has been selected. This is a UI convenience only; server-side upload validation remains required.
+
+Processed rows must keep enough debug context: spreadsheet row number, raw `location`, raw `prize`, status, counted countries, ignored countries and reason when applicable. Show sanitized details in the pending preview, not duplicated in the admin notice. The upload/admin notice should remain a short confirmation that the Excel file was processed. Ignored row details must still be written to `logs/fmb-error.log`.
+
+The pending preview must use collapsible accordions:
+
+- A processed-row accordion with totals in the header and row-level details inside. Counted/processed rows should be visually highlighted in green and bold.
+- A detected-medals accordion showing the country medal totals and whether approval will create or update each country.
+
+When one `location` cell contains multiple country values separated by `/`, the row detail must state which allowed countries were counted and which countries were ignored. Example: `Spain / Brazil / Argentina` should count Argentina and ignore Spain and Brazil.
 
 Imports are two-step by design: preview first, then approve and merge. Do not write imported medal totals to the database during upload processing. A pending preview can be discarded without touching persisted medal data.
 
-The admin page must show a **Registro de importaciones** for approved imports. Discarded previews must not be added to this history.
+The admin page must show a **Registro de importaciones** for approved imports. The register must clearly distinguish a pending preview from approved imports: pending files are marked as not merged/not saved yet, while the approved history is collapsible and lists only approved imports. Discarded previews must not be added to this history.
 
 The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for browser confirmation and log deleted row count.
 

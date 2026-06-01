@@ -47,9 +47,9 @@ Supported `prize` values:
 - `Silver Lion`, `Silver Lion Campaign` and `Silver` map to silver.
 - `Bronze Lion`, `Bronze Lion Campaign` and `Bronze` map to bronze.
 
-Rows with empty countries or unrecognized prizes are ignored and reported in the import summary.
+Rows with empty countries or unrecognized prizes are ignored and reported in the pending preview details.
 The header row can use different casing, such as `Location` and `Prize`, and may appear after an initial title row.
-Ignored rows include the spreadsheet row number, original `location`, original `prize` and the reason. The same details are written to `logs/fmb-error.log`.
+Processed row details include the spreadsheet row number, original `location`, original `prize`, status and reason. When a `location` cell contains multiple countries separated by `/`, the preview states which allowed countries were counted and which non-allowed countries were ignored. For example, `Spain / Brazil / Argentina` counts Argentina and ignores Spain and Brazil. Ignored row details are also written to `logs/fmb-error.log`.
 
 Only these Hispanoamerica countries are counted:
 
@@ -101,11 +101,13 @@ add_filter('fmb_allowed_countries', static function (array $countries): array {
 
 Go to **Medal Tracker** in the WordPress admin dashboard.
 
-The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. Uploading a file creates a pending preview only; no medal totals are persisted yet. The admin page shows the countries and prize values that will be counted before upload.
+The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. The **Generar vista previa** button stays disabled until a file is selected. Uploading a file creates a pending preview only; no medal totals are persisted yet. The admin page shows the countries and prize values that will be counted before upload.
+
+The pending preview uses collapsible accordions. One accordion lists every processed row, highlighting counted rows in green and bold while keeping ignored rows visually separate. Another accordion shows the detected medal totals by country and the create/update action that would happen on approval.
 
 After reviewing the preview, use **Approve and continue** to merge the detected medals into the database. Existing countries are incremented; new countries are inserted. You can also discard the pending preview without changing the database. Approval and discard actions require a nonce, `manage_options` and browser confirmation.
 
-Approved imports are listed in **Registro de importaciones** with the uploaded filename, approval date, valid rows, ignored rows and country create/update counts. Discarded previews are not added to this history.
+The upload notice only confirms that the Excel file was processed and points back to the preview; it does not duplicate row details. **Registro de importaciones** separates pending previews from approved imports: a pending file is marked as not merged and not yet saved in the medal table, while approved imports are listed in a collapsible history with filename, approval date, valid rows, ignored rows and country create/update counts. Discarded previews are not added to this history.
 
 The admin page also includes a reset action to delete all medal rows from the plugin table. The reset requires `manage_options`, a nonce, a browser confirmation and typing the exact confirmation phrase `reiniciar medallero`.
 
