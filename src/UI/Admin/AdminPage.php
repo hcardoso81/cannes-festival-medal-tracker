@@ -378,7 +378,7 @@ final class AdminPage
             <h2><?php echo esc_html__('Medallero actual', 'cannes-festival-medal-tracker'); ?></h2>
             <?php $this->renderCurrentTable($rows); ?>
 
-            <?php $this->renderImportLog($importLog); ?>
+            <?php $this->renderImportLog($importLog, is_array($preview) ? $preview : []); ?>
 
             <div class="fmb-danger-zone">
                 <h2><?php echo esc_html__('Reiniciar medallero', 'cannes-festival-medal-tracker'); ?></h2>
@@ -847,10 +847,31 @@ final class AdminPage
         <?php
     }
 
-    private function renderImportLog(array $entries): void
+    private function renderImportLog(array $entries, array $pendingPreview): void
     {
         ?>
         <h2><?php echo esc_html__('Registro de importaciones', 'cannes-festival-medal-tracker'); ?></h2>
+        <?php if (!empty($pendingPreview['preview'])) : ?>
+            <div class="fmb-pending-import">
+                <strong><?php echo esc_html__('Pendiente de aprobar:', 'cannes-festival-medal-tracker'); ?></strong>
+                <?php echo esc_html((string) ($pendingPreview['source_file'] ?? __('Archivo sin nombre', 'cannes-festival-medal-tracker'))); ?>
+                <span class="fmb-pending-import__status">
+                    <?php echo esc_html__('No mergeado. Todavia no se guardo en el medallero.', 'cannes-festival-medal-tracker'); ?>
+                </span>
+                <span>
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: 1: valid rows, 2: ignored rows. */
+                            __('Filas validas: %1$d. Filas ignoradas: %2$d.', 'cannes-festival-medal-tracker'),
+                            (int) ($pendingPreview['valid_rows'] ?? 0),
+                            (int) ($pendingPreview['ignored_rows'] ?? 0)
+                        )
+                    );
+                    ?>
+                </span>
+            </div>
+        <?php endif; ?>
         <?php if (empty($entries)) : ?>
             <p><?php echo esc_html__('Todavia no hay importaciones aprobadas.', 'cannes-festival-medal-tracker'); ?></p>
             <?php
@@ -863,7 +884,7 @@ final class AdminPage
                 echo esc_html(
                     sprintf(
                         /* translators: %d: processed import files. */
-                        __('Archivos procesados: %d. Ver detalle.', 'cannes-festival-medal-tracker'),
+                        __('Importaciones aprobadas: %d. Ver detalle.', 'cannes-festival-medal-tracker'),
                         count($entries)
                     )
                 );
