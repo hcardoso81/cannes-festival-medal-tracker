@@ -65,7 +65,7 @@ Imports are two-step by design: preview first, then approve and merge. Do not wr
 
 The admin page must show a **Registro de importaciones** for approved imports. The register must clearly distinguish a pending preview from approved imports: pending files are marked as not merged/not saved yet, while the approved history is collapsible and lists only approved imports. Discarded previews must not be added to this history.
 
-The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for browser confirmation and log deleted row count.
+The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for browser confirmation and log deleted row count. Reset must also clear any pending preview and the approved import log, then log how many approved import history entries were removed.
 
 ## Shortcodes
 

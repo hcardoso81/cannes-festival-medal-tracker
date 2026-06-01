@@ -57,6 +57,11 @@
     border-left-width: 4px;
 }
 
+.fmb-pending-import--empty {
+    background: #fcf0f1;
+    border-color: #d63638;
+}
+
 .fmb-pending-import span {
     display: block;
     margin-top: 0.35rem;
@@ -64,6 +69,11 @@
 
 .fmb-pending-import__status {
     font-weight: 600;
+}
+
+.fmb-pending-import__warning {
+    color: #b32d2e;
+    font-weight: 700;
 }
 
 .fmb-counting-rules {
@@ -127,8 +137,40 @@
     border-left-width: 4px;
 }
 
+.fmb-import-preview--empty {
+    border-color: #d63638;
+}
+
 .fmb-import-preview h2 {
     margin-top: 0;
+}
+
+.fmb-zero-results-notice p {
+    font-weight: 700;
+}
+
+.fmb-zero-results-alert {
+    margin: 1rem 0;
+    padding: 1rem;
+    color: #3c434a;
+    background: #fcf0f1;
+    border: 1px solid #d63638;
+    border-left-width: 6px;
+}
+
+.fmb-zero-results-alert strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #b32d2e;
+    font-size: 1.05rem;
+}
+
+.fmb-zero-results-alert p {
+    margin: 0.25rem 0 0;
+}
+
+.fmb-empty-preview {
+    margin: 0.75rem 1rem 1rem;
 }
 
 .fmb-preview-actions {

@@ -282,13 +282,16 @@ final class AdminPage
         }
 
         $deleted = $this->repository->deleteAll();
+        $deletedImportLogEntries = count($this->getImportLog());
         delete_transient($this->previewTransientKey());
+        delete_option(self::IMPORT_LOG_OPTION);
 
         $this->logger->warning(
             'Medal standings were reset from admin.',
             [
-                'user_id'      => get_current_user_id(),
-                'deleted_rows' => $deleted,
+                'user_id'                    => get_current_user_id(),
+                'deleted_rows'               => $deleted,
+                'deleted_import_log_entries' => $deletedImportLogEntries,
             ]
         );
 
@@ -296,8 +299,9 @@ final class AdminPage
             self::TRANSIENT_PREFIX . get_current_user_id(),
             [
                 'summary' => [
-                    'reset'        => true,
-                    'deleted_rows' => $deleted,
+                    'reset'                      => true,
+                    'deleted_rows'               => $deleted,
+                    'deleted_import_log_entries' => $deletedImportLogEntries,
                 ],
                 'error'   => '',
             ],
@@ -535,9 +539,10 @@ final class AdminPage
                     <?php
                     echo esc_html(
                         sprintf(
-                            /* translators: %d: deleted database rows. */
-                            __('Reinicio del medallero completado. Filas eliminadas: %d.', 'cannes-festival-medal-tracker'),
-                            (int) ($summary['deleted_rows'] ?? 0)
+                            /* translators: 1: deleted database rows, 2: deleted approved import log entries. */
+                            __('Reinicio del medallero completado. Filas eliminadas: %1$d. Registros de importaciones aprobadas eliminados: %2$d.', 'cannes-festival-medal-tracker'),
+                            (int) ($summary['deleted_rows'] ?? 0),
+                            (int) ($summary['deleted_import_log_entries'] ?? 0)
                         )
                     );
                     ?>
@@ -556,30 +561,54 @@ final class AdminPage
             return;
         }
 
+        $hasDetectedMedals = $this->hasDetectedMedals($summary);
+        $noticeClass = !$hasDetectedMedals && empty($summary['committed'])
+            ? 'notice notice-error is-dismissible fmb-zero-results-notice'
+            : 'notice notice-success is-dismissible';
         ?>
-        <div class="notice notice-success is-dismissible">
+        <div class="<?php echo esc_attr($noticeClass); ?>">
             <p>
                 <?php
                 if (!empty($summary['committed'])) {
-                    echo esc_html(
-                        sprintf(
-                            /* translators: 1: valid rows, 2: ignored rows, 3: created countries, 4: updated countries. */
-                            __('Importacion aprobada y guardada. Filas validas: %1$d. Filas ignoradas: %2$d. Paises creados: %3$d. Paises actualizados: %4$d.', 'cannes-festival-medal-tracker'),
-                            (int) $summary['valid_rows'],
-                            (int) $summary['ignored_rows'],
-                            (int) ($summary['countries_created'] ?? 0),
-                            (int) ($summary['countries_updated'] ?? 0)
-                        )
-                    );
+                    if ($hasDetectedMedals) {
+                        echo esc_html(
+                            sprintf(
+                                /* translators: 1: valid rows, 2: ignored rows, 3: created countries, 4: updated countries. */
+                                __('Importacion aprobada y guardada. Filas validas: %1$d. Filas ignoradas: %2$d. Paises creados: %3$d. Paises actualizados: %4$d.', 'cannes-festival-medal-tracker'),
+                                (int) $summary['valid_rows'],
+                                (int) $summary['ignored_rows'],
+                                (int) ($summary['countries_created'] ?? 0),
+                                (int) ($summary['countries_updated'] ?? 0)
+                            )
+                        );
+                    } else {
+                        echo esc_html(
+                            sprintf(
+                                /* translators: 1: ignored rows. */
+                                __('Importacion aprobada y guardada en el historial. No se encontraron medallas para mergear; filas ignoradas: %1$d.', 'cannes-festival-medal-tracker'),
+                                (int) $summary['ignored_rows']
+                            )
+                        );
+                    }
                 } else {
-                    echo esc_html(
-                        sprintf(
-                            /* translators: 1: valid rows, 2: ignored rows. */
-                            __('Vista previa de importacion lista. Filas validas: %1$d. Filas ignoradas: %2$d. Revisa la vista previa y luego aprueba para guardar los datos.', 'cannes-festival-medal-tracker'),
-                            (int) $summary['valid_rows'],
-                            (int) $summary['ignored_rows']
-                        )
-                    );
+                    if ($hasDetectedMedals) {
+                        echo esc_html(
+                            sprintf(
+                                /* translators: 1: valid rows, 2: ignored rows. */
+                                __('Vista previa de importacion lista. Filas validas: %1$d. Filas ignoradas: %2$d. Revisa la vista previa y luego aprueba para guardar los datos.', 'cannes-festival-medal-tracker'),
+                                (int) $summary['valid_rows'],
+                                (int) $summary['ignored_rows']
+                            )
+                        );
+                    } else {
+                        echo esc_html(
+                            sprintf(
+                                /* translators: 1: ignored rows. */
+                                __('Archivo procesado sin resultados para mergear. Filas ignoradas: %1$d. Puedes aprobar igual para que el archivo quede registrado en el historial.', 'cannes-festival-medal-tracker'),
+                                (int) $summary['ignored_rows']
+                            )
+                        );
+                    }
                 }
                 ?>
             </p>
@@ -595,12 +624,20 @@ final class AdminPage
 
     private function renderPendingPreview(array $preview): void
     {
-        if (empty($preview['preview']) || empty($preview['imported']) || !is_array($preview['imported'])) {
+        if (empty($preview['preview'])) {
             return;
         }
 
+        $imported = is_array($preview['imported'] ?? null) ? $preview['imported'] : [];
+        $hasDetectedMedals = $this->hasDetectedMedals($preview);
+        $approveConfirmation = $hasDetectedMedals
+            ? __('Aprobar y continuar? Esto va a combinar la vista previa con el medallero guardado.', 'cannes-festival-medal-tracker')
+            : __('Aprobar y guardar en historial? No se encontraron medallas, asi que el medallero no cambiara.', 'cannes-festival-medal-tracker');
+        $approveLabel = $hasDetectedMedals
+            ? __('Aprobar y continuar', 'cannes-festival-medal-tracker')
+            : __('Aprobar y guardar en historial', 'cannes-festival-medal-tracker');
         ?>
-        <div class="fmb-import-preview">
+        <div class="<?php echo esc_attr($hasDetectedMedals ? 'fmb-import-preview' : 'fmb-import-preview fmb-import-preview--empty'); ?>">
             <h2><?php echo esc_html__('Vista previa pendiente de importacion', 'cannes-festival-medal-tracker'); ?></h2>
             <?php if (!empty($preview['source_file'])) : ?>
                 <p>
@@ -620,6 +657,14 @@ final class AdminPage
                 );
                 ?>
             </p>
+            <?php if (!$hasDetectedMedals) : ?>
+                <div class="fmb-zero-results-alert" role="alert">
+                    <strong><?php echo esc_html__('No se encontraron resultados para mergear.', 'cannes-festival-medal-tracker'); ?></strong>
+                    <p>
+                        <?php echo esc_html__('El archivo fue procesado, pero ninguna fila genero medallas para los paises y prizes configurados. Puedes aprobar esta vista previa para guardar la referencia del archivo en el registro historico sin modificar el medallero.', 'cannes-festival-medal-tracker'); ?>
+                    </p>
+                </div>
+            <?php endif; ?>
             <?php $this->renderProcessedRowsAccordion($preview); ?>
             <details class="fmb-accordion" open>
                 <summary>
@@ -628,23 +673,23 @@ final class AdminPage
                         sprintf(
                             /* translators: 1: country count, 2: valid rows. */
                             __('Medallas detectadas: %1$d paises con %2$d filas validas. Ver detalle.', 'cannes-festival-medal-tracker'),
-                            count($preview['imported']),
+                            count($imported),
                             (int) ($preview['valid_rows'] ?? 0)
                         )
                     );
                     ?>
                 </summary>
-                <?php $this->renderPreviewMedalsTable($preview['imported']); ?>
+                <?php $this->renderPreviewMedalsTable($imported); ?>
             </details>
             <div class="fmb-preview-actions">
                 <form
                     method="post"
                     action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
-                    onsubmit="return confirm('<?php echo esc_js(__('Aprobar y continuar? Esto va a combinar la vista previa con el medallero guardado.', 'cannes-festival-medal-tracker')); ?>');"
+                    onsubmit="return confirm('<?php echo esc_js($approveConfirmation); ?>');"
                 >
                     <input type="hidden" name="action" value="<?php echo esc_attr(self::APPROVE_ACTION); ?>">
                     <?php wp_nonce_field(self::APPROVE_NONCE_ACTION, self::APPROVE_NONCE_FIELD); ?>
-                    <?php submit_button(__('Aprobar y continuar', 'cannes-festival-medal-tracker'), 'primary', 'submit', false); ?>
+                    <?php submit_button($approveLabel, 'primary', 'submit', false); ?>
                 </form>
                 <form
                     method="post"
@@ -775,6 +820,15 @@ final class AdminPage
 
     private function renderPreviewMedalsTable(array $items): void
     {
+        if (empty($items)) {
+            ?>
+            <p class="fmb-empty-preview">
+                <?php echo esc_html__('No hay medallas detectadas para mostrar. Aprobar esta vista previa solo guardara el archivo en el historial de importaciones aprobadas.', 'cannes-festival-medal-tracker'); ?>
+            </p>
+            <?php
+            return;
+        }
+
         ?>
         <table class="widefat striped fmb-admin-standings">
             <thead>
@@ -852,7 +906,7 @@ final class AdminPage
         ?>
         <h2><?php echo esc_html__('Registro de importaciones', 'cannes-festival-medal-tracker'); ?></h2>
         <?php if (!empty($pendingPreview['preview'])) : ?>
-            <div class="fmb-pending-import">
+            <div class="<?php echo esc_attr($this->hasDetectedMedals($pendingPreview) ? 'fmb-pending-import' : 'fmb-pending-import fmb-pending-import--empty'); ?>">
                 <strong><?php echo esc_html__('Pendiente de aprobar:', 'cannes-festival-medal-tracker'); ?></strong>
                 <?php echo esc_html((string) ($pendingPreview['source_file'] ?? __('Archivo sin nombre', 'cannes-festival-medal-tracker'))); ?>
                 <span class="fmb-pending-import__status">
@@ -870,6 +924,11 @@ final class AdminPage
                     );
                     ?>
                 </span>
+                <?php if (!$this->hasDetectedMedals($pendingPreview)) : ?>
+                    <span class="fmb-pending-import__warning">
+                        <?php echo esc_html__('Sin resultados para mergear. Apruebalo si quieres conservar este archivo en el historial de procesados.', 'cannes-festival-medal-tracker'); ?>
+                    </span>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
         <?php if (empty($entries)) : ?>
@@ -976,6 +1035,11 @@ final class AdminPage
     private function previewTransientKey(): string
     {
         return self::PREVIEW_TRANSIENT_PREFIX . get_current_user_id();
+    }
+
+    private function hasDetectedMedals(array $summary): bool
+    {
+        return !empty($summary['imported']) && is_array($summary['imported']);
     }
 
     private function medalLabel(string $medal): string

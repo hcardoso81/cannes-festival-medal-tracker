@@ -103,13 +103,13 @@ Go to **Medal Tracker** in the WordPress admin dashboard.
 
 The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. The **Generar vista previa** button stays disabled until a file is selected. Uploading a file creates a pending preview only; no medal totals are persisted yet. The admin page shows the countries and prize values that will be counted before upload.
 
-The pending preview uses collapsible accordions. One accordion lists every processed row, highlighting counted rows in green and bold while keeping ignored rows visually separate. Another accordion shows the detected medal totals by country and the create/update action that would happen on approval.
+The pending preview uses collapsible accordions. One accordion lists every processed row, highlighting counted rows in green and bold while keeping ignored rows visually separate. Another accordion shows the detected medal totals by country and the create/update action that would happen on approval. If a processed file does not produce medal results, the admin UI shows a red warning and keeps the approval action available so the file can still be recorded in the approved import history without changing medal totals.
 
-After reviewing the preview, use **Approve and continue** to merge the detected medals into the database. Existing countries are incremented; new countries are inserted. You can also discard the pending preview without changing the database. Approval and discard actions require a nonce, `manage_options` and browser confirmation.
+After reviewing the preview, use **Approve and continue** to merge the detected medals into the database. Existing countries are incremented; new countries are inserted. When no medals were detected, approving only records the source file in the historical import log. You can also discard the pending preview without changing the database. Approval and discard actions require a nonce, `manage_options` and browser confirmation.
 
 The upload notice only confirms that the Excel file was processed and points back to the preview; it does not duplicate row details. **Registro de importaciones** separates pending previews from approved imports: a pending file is marked as not merged and not yet saved in the medal table, while approved imports are listed in a collapsible history with filename, approval date, valid rows, ignored rows and country create/update counts. Discarded previews are not added to this history.
 
-The admin page also includes a reset action to delete all medal rows from the plugin table. The reset requires `manage_options`, a nonce, a browser confirmation and typing the exact confirmation phrase `reiniciar medallero`.
+The admin page also includes a reset action to delete all medal rows from the plugin table. Reset also clears the pending preview and the approved import history, so **Registro de importaciones** returns to an empty state. The reset requires `manage_options`, a nonce, a browser confirmation and typing the exact confirmation phrase `reiniciar medallero`.
 
 ## Shortcodes
 
