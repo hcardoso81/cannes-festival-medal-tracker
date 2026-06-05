@@ -84,24 +84,95 @@ final class AdminPage
             FMB_VERSION
         );
 
+        $approvedFiles = array_values(
+            array_unique(
+                array_filter(
+                    array_map(
+                        static function (array $entry): string {
+                            return sanitize_file_name((string) ($entry['source_file'] ?? ''));
+                        },
+                        $this->getImportLog()
+                    )
+                )
+            )
+        );
+
         wp_register_script('fmb-admin-upload', '', [], FMB_VERSION, true);
         wp_enqueue_script('fmb-admin-upload');
         wp_add_inline_script(
             'fmb-admin-upload',
-            "document.addEventListener('DOMContentLoaded', function () {
+            'window.fmbApprovedImportFiles = ' . wp_json_encode($approvedFiles) . ";
+            document.addEventListener('DOMContentLoaded', function () {
+                var uploadForm = document.querySelector('.fmb-upload-form');
                 var fileInput = document.getElementById('fmb_medal_file');
                 var submitButton = document.getElementById('fmb_generate_preview');
+                var duplicateConfirmationInput = document.getElementById('fmb_duplicate_import_confirmed');
+                var approvedFiles = Array.isArray(window.fmbApprovedImportFiles) ? window.fmbApprovedImportFiles : [];
+                var approvedFileLookup = approvedFiles.map(function (fileName) {
+                    return String(fileName).toLowerCase();
+                });
 
-                if (!fileInput || !submitButton) {
+                if (!uploadForm || !fileInput || !submitButton || !duplicateConfirmationInput) {
                     return;
                 }
 
+                var selectedFileName = function () {
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        return '';
+                    }
+
+                    return fileInput.files[0].name || '';
+                };
+
                 var toggleSubmit = function () {
                     submitButton.disabled = !fileInput.files || fileInput.files.length === 0;
+                    duplicateConfirmationInput.value = '0';
+                };
+
+                var sanitizeFileName = function (fileName) {
+                    var normalized = String(fileName);
+
+                    if (typeof normalized.normalize === 'function') {
+                        normalized = normalized.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
+                    }
+
+                    return normalized
+                        .replace(/^.*[\\\\\\/]/, '')
+                        .replace(/[\\s]+/g, '-')
+                        .replace(/[^A-Za-z0-9._-]/g, '');
+                };
+
+                var isApprovedFile = function (fileName) {
+                    var candidates = [
+                        fileName,
+                        sanitizeFileName(fileName)
+                    ];
+
+                    return candidates.some(function (candidate) {
+                        return approvedFileLookup.indexOf(String(candidate).toLowerCase()) !== -1;
+                    });
                 };
 
                 toggleSubmit();
                 fileInput.addEventListener('change', toggleSubmit);
+
+                uploadForm.addEventListener('submit', function (event) {
+                    var fileName = selectedFileName();
+
+                    if (!fileName || !isApprovedFile(fileName)) {
+                        return;
+                    }
+
+                    var confirmed = confirm('" . esc_js(__('Este archivo ya fue confirmado anteriormente. Si continuas, se generara una nueva vista previa y podrias duplicar medallas al aprobarla. Quieres continuar?', 'cannes-festival-medal-tracker')) . "');
+
+                    if (!confirmed) {
+                        event.preventDefault();
+                        duplicateConfirmationInput.value = '0';
+                        return;
+                    }
+
+                    duplicateConfirmationInput.value = '1';
+                });
             });"
         );
     }
@@ -121,6 +192,7 @@ final class AdminPage
         $fileName = '';
 
         try {
+            $this->validateDuplicateImportConfirmation();
             $upload   = $this->handleUpload();
             $filePath = $upload['path'];
             $fileName = $upload['name'];
@@ -333,6 +405,7 @@ final class AdminPage
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" class="fmb-upload-form">
                 <input type="hidden" name="action" value="<?php echo esc_attr(self::ACTION); ?>">
+                <input type="hidden" id="fmb_duplicate_import_confirmed" name="fmb_duplicate_import_confirmed" value="0">
                 <?php wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD); ?>
 
                 <table class="form-table" role="presentation">
@@ -509,6 +582,38 @@ final class AdminPage
             'path' => (string) $uploaded['file'],
             'name' => sanitize_file_name((string) $file['name']),
         ];
+    }
+
+    private function validateDuplicateImportConfirmation(): void
+    {
+        if (empty($_FILES['fmb_medal_file']) || !is_array($_FILES['fmb_medal_file'])) {
+            return;
+        }
+
+        $file = $_FILES['fmb_medal_file'];
+        $fileName = sanitize_file_name((string) ($file['name'] ?? ''));
+
+        if ('' === $fileName || !$this->hasApprovedImportForFile($fileName)) {
+            return;
+        }
+
+        $confirmed = isset($_POST['fmb_duplicate_import_confirmed'])
+            ? sanitize_text_field(wp_unslash($_POST['fmb_duplicate_import_confirmed']))
+            : '0';
+
+        if ('1' === $confirmed) {
+            return;
+        }
+
+        $this->logger->warning(
+            'Duplicate confirmed import upload blocked before preview.',
+            [
+                'user_id'     => get_current_user_id(),
+                'source_file' => $fileName,
+            ]
+        );
+
+        throw new RuntimeException(__('Este archivo ya fue confirmado anteriormente. Vuelve a seleccionarlo y confirma que quieres continuar.', 'cannes-festival-medal-tracker'));
     }
 
     private function renderNotice(array $notice): void
@@ -1012,6 +1117,17 @@ final class AdminPage
                 }
             )
         );
+    }
+
+    private function hasApprovedImportForFile(string $fileName): bool
+    {
+        foreach ($this->getImportLog() as $entry) {
+            if ($fileName === sanitize_file_name((string) ($entry['source_file'] ?? ''))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function logIgnoredRows(?array $summary): void

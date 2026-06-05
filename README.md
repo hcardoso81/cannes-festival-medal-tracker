@@ -101,7 +101,7 @@ add_filter('fmb_allowed_countries', static function (array $countries): array {
 
 Go to **Medal Tracker** in the WordPress admin dashboard.
 
-The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. The **Generar vista previa** button stays disabled until a file is selected. Uploading a file creates a pending preview only; no medal totals are persisted yet. The admin page shows the countries and prize values that will be counted before upload.
+The page lets administrators with `manage_options` upload an `.xlsx`, `.xls` or `.csv` file. The **Generar vista previa** button stays disabled until a file is selected. If the selected file was already approved in the import history, the browser asks for confirmation before processing it again. Uploading a file creates a pending preview only; no medal totals are persisted yet. The admin page shows the countries and prize values that will be counted before upload.
 
 The pending preview uses collapsible accordions. One accordion lists every processed row, highlighting counted rows in green and bold while keeping ignored rows visually separate. Another accordion shows the detected medal totals by country and the create/update action that would happen on approval. If a processed file does not produce medal results, the admin UI shows a red warning and keeps the approval action available so the file can still be recorded in the approved import history without changing medal totals.
 
