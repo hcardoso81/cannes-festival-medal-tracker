@@ -30,6 +30,17 @@ Current layers:
 - `src/UI/Admin`: admin pages, admin-post handlers and admin assets.
 - `src/UI/Frontend`: shortcode rendering and frontend assets.
 
+## Clean Code and UI Composition
+
+Do not build giant view/controller files. Keep admin pages, widgets and request handlers componentized so each class has one clear responsibility.
+
+- Controllers such as `AdminPage` should register hooks, validate requests, orchestrate use cases and redirect.
+- Rendering belongs in small view classes or widgets such as `AdminPageRenderer`.
+- Extract repeated or bulky UI blocks instead of adding hundreds of lines to one file.
+- Prefer readable methods with focused names over long procedural templates.
+- Keep future admin widgets isolated enough that they can be moved, tested or replaced without touching import, persistence or shortcode behavior.
+- If a file grows past roughly 500 lines, split by responsibility before adding more features.
+
 ## Admin Flow
 
 The admin page is available under **Medal Tracker** and requires `manage_options`.
