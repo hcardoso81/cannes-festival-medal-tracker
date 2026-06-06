@@ -6,6 +6,7 @@ namespace FestivalMedalTracker\Application;
 
 use FestivalMedalTracker\Domain\Service\MedalNormalizer;
 use FestivalMedalTracker\Infrastructure\Excel\PhpSpreadsheetExcelReader;
+use FestivalMedalTracker\Infrastructure\Persistence\ImportRepository;
 use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
 
 if (!defined('ABSPATH')) {
@@ -20,14 +21,18 @@ final class ImportMedalsUseCase
 
     private MedalRepository $repository;
 
+    private ImportRepository $imports;
+
     public function __construct(
         PhpSpreadsheetExcelReader $reader,
         MedalNormalizer $normalizer,
-        MedalRepository $repository
+        MedalRepository $repository,
+        ImportRepository $imports
     ) {
         $this->reader     = $reader;
         $this->normalizer = $normalizer;
         $this->repository = $repository;
+        $this->imports    = $imports;
     }
 
     public function preview(string $filePath): array
@@ -130,6 +135,11 @@ final class ImportMedalsUseCase
         return $this->normalizer->getAllowedCountries();
     }
 
+    public function getCountedCountries(): array
+    {
+        return $this->normalizer->getCountedCountries();
+    }
+
     public function getPrizeSynonyms(): array
     {
         return $this->normalizer->getPrizeSynonyms();
@@ -137,35 +147,122 @@ final class ImportMedalsUseCase
 
     public function commitPreview(array $preview): array
     {
+        global $wpdb;
+
         $summary = $preview;
         $summary['countries_created'] = 0;
         $summary['countries_updated'] = 0;
         $summary['preview']           = false;
         $summary['committed']         = true;
 
-        foreach ($summary['imported'] ?? [] as $item) {
-            if (empty($item['country']) || !is_array($item['medals'] ?? null)) {
-                continue;
+        $wpdb->query('START TRANSACTION');
+
+        try {
+            foreach ($summary['imported'] ?? [] as $item) {
+                if (empty($item['country']) || !is_array($item['medals'] ?? null)) {
+                    continue;
+                }
+
+                $country = (string) $item['country'];
+                $medals  = $item['medals'];
+                $result = $this->repository->upsertAndIncrement(
+                    $country,
+                    (int) ($medals['gp'] ?? 0),
+                    (int) ($medals['gold'] ?? 0),
+                    (int) ($medals['silver'] ?? 0),
+                    (int) ($medals['bronze'] ?? 0)
+                );
+
+                if ('created' === $result) {
+                    $summary['countries_created']++;
+                } else {
+                    $summary['countries_updated']++;
+                }
             }
 
-            $country = (string) $item['country'];
-            $medals  = $item['medals'];
-            $result = $this->repository->upsertAndIncrement(
-                $country,
-                (int) ($medals['gp'] ?? 0),
-                (int) ($medals['gold'] ?? 0),
-                (int) ($medals['silver'] ?? 0),
-                (int) ($medals['bronze'] ?? 0)
-            );
+            $importId = $this->imports->createApprovedImport($summary, get_current_user_id());
 
-            if ('created' === $result) {
-                $summary['countries_created']++;
-            } else {
-                $summary['countries_updated']++;
+            foreach ($summary['imported'] ?? [] as $item) {
+                if (empty($item['country']) || !is_array($item['medals'] ?? null)) {
+                    continue;
+                }
+
+                $medals = $item['medals'];
+                $this->imports->addDelta(
+                    $importId,
+                    (string) $item['country'],
+                    (int) ($medals['gp'] ?? 0),
+                    (int) ($medals['gold'] ?? 0),
+                    (int) ($medals['silver'] ?? 0),
+                    (int) ($medals['bronze'] ?? 0)
+                );
             }
+
+            $summary['import_id'] = $importId;
+            $wpdb->query('COMMIT');
+        } catch (\Throwable $throwable) {
+            $wpdb->query('ROLLBACK');
+            throw $throwable;
         }
 
         return $summary;
+    }
+
+    public function undoImport(int $importId): array
+    {
+        global $wpdb;
+
+        $import = $this->imports->find($importId);
+
+        if (!is_array($import)) {
+            throw new \RuntimeException(__('No se encontro la importacion solicitada.', 'cannes-festival-medal-tracker'));
+        }
+
+        if ('approved' !== (string) ($import['status'] ?? '')) {
+            throw new \RuntimeException(__('Esta importacion ya fue deshecha o no esta disponible.', 'cannes-festival-medal-tracker'));
+        }
+
+        $deltas = $this->imports->getDeltas($importId);
+
+        if (empty($deltas)) {
+            throw new \RuntimeException(__('Esta importacion no tiene detalle de medallas para deshacer.', 'cannes-festival-medal-tracker'));
+        }
+
+        $wpdb->query('START TRANSACTION');
+
+        try {
+            foreach ($deltas as $delta) {
+                $this->repository->decrement(
+                    (string) ($delta['country'] ?? ''),
+                    (int) ($delta['gp'] ?? 0),
+                    (int) ($delta['gold'] ?? 0),
+                    (int) ($delta['silver'] ?? 0),
+                    (int) ($delta['bronze'] ?? 0)
+                );
+            }
+
+            $this->imports->deleteImport($importId);
+            $wpdb->query('COMMIT');
+        } catch (\Throwable $throwable) {
+            $wpdb->query('ROLLBACK');
+            throw $throwable;
+        }
+
+        $import['status'] = 'deleted';
+        $import['undone_rows'] = count($deltas);
+        $import['undone_medals'] = array_reduce(
+            $deltas,
+            static function (int $total, array $delta): int {
+                return $total
+                    + (int) ($delta['gp'] ?? 0)
+                    + (int) ($delta['gold'] ?? 0)
+                    + (int) ($delta['silver'] ?? 0)
+                    + (int) ($delta['bronze'] ?? 0);
+            },
+            0
+        );
+
+        return $import;
     }
 
     private function cleanCellForSummary(string $value): string

@@ -74,6 +74,34 @@ final class MedalRepository
         return 'updated';
     }
 
+    public function decrement(string $country, int $gp, int $gold, int $silver, int $bronze): void
+    {
+        global $wpdb;
+
+        $wpdb->query(
+            $wpdb->prepare(
+                'UPDATE ' . DatabaseInstaller::tableName() . '
+                SET gp = GREATEST(gp - %d, 0),
+                    gold = GREATEST(gold - %d, 0),
+                    silver = GREATEST(silver - %d, 0),
+                    bronze = GREATEST(bronze - %d, 0),
+                    updated_at = %s
+                WHERE country = %s',
+                max(0, $gp),
+                max(0, $gold),
+                max(0, $silver),
+                max(0, $bronze),
+                current_time('mysql'),
+                $country
+            )
+        );
+
+        $wpdb->query(
+            'DELETE FROM ' . DatabaseInstaller::tableName() . '
+            WHERE gp = 0 AND gold = 0 AND silver = 0 AND bronze = 0'
+        );
+    }
+
     public function getCountryTotals(): array
     {
         global $wpdb;

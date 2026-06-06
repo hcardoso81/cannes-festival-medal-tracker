@@ -6,6 +6,7 @@ namespace FestivalMedalTracker\UI\Admin;
 
 use FestivalMedalTracker\Application\ImportMedalsUseCase;
 use FestivalMedalTracker\Infrastructure\Logging\FileLogger;
+use FestivalMedalTracker\Infrastructure\Persistence\ImportRepository;
 use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
 use RuntimeException;
 use Throwable;
@@ -30,25 +31,37 @@ final class AdminPage
     private const DISCARD_ACTION = 'fmb_discard_import_preview';
     private const DISCARD_NONCE_ACTION = 'fmb_discard_import_preview_nonce';
     private const DISCARD_NONCE_FIELD = 'fmb_discard_preview_nonce';
+    private const UNDO_ACTION = 'fmb_undo_import';
+    private const UNDO_NONCE_ACTION = 'fmb_undo_import_nonce';
+    private const UNDO_NONCE_FIELD = 'fmb_undo_import_nonce';
     private const TRANSIENT_PREFIX = 'fmb_import_summary_';
     private const PREVIEW_TRANSIENT_PREFIX = 'fmb_import_preview_';
-    private const IMPORT_LOG_OPTION = 'fmb_import_log';
     private const IMPORT_LOG_LIMIT = 100;
 
     private ImportMedalsUseCase $importer;
 
     private MedalRepository $repository;
 
+    private ImportRepository $imports;
+
     private FileLogger $logger;
 
     private AdminPageRenderer $renderer;
 
-    public function __construct(ImportMedalsUseCase $importer, MedalRepository $repository, FileLogger $logger)
-    {
+    private AdminImportHistory $history;
+
+    public function __construct(
+        ImportMedalsUseCase $importer,
+        MedalRepository $repository,
+        ImportRepository $imports,
+        FileLogger $logger
+    ) {
         $this->importer   = $importer;
         $this->repository = $repository;
+        $this->imports    = $imports;
         $this->logger     = $logger;
         $this->renderer   = new AdminPageRenderer($importer, $repository);
+        $this->history    = new AdminImportHistory($imports);
     }
 
     public function registerHooks(): void
@@ -57,6 +70,7 @@ final class AdminPage
         add_action('admin_post_' . self::ACTION, [$this, 'handleImport']);
         add_action('admin_post_' . self::APPROVE_ACTION, [$this, 'handleApprovePreview']);
         add_action('admin_post_' . self::DISCARD_ACTION, [$this, 'handleDiscardPreview']);
+        add_action('admin_post_' . self::UNDO_ACTION, [$this, 'handleUndoImport']);
         add_action('admin_post_' . self::RESET_ACTION, [$this, 'handleReset']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
     }
@@ -76,20 +90,7 @@ final class AdminPage
 
     public function enqueueAssets(string $hookSuffix): void
     {
-        $approvedFiles = array_values(
-            array_unique(
-                array_filter(
-                    array_map(
-                        static function (array $entry): string {
-                            return sanitize_file_name((string) ($entry['source_file'] ?? ''));
-                        },
-                        $this->getImportLog()
-                    )
-                )
-            )
-        );
-
-        AdminAssets::enqueue($hookSuffix, 'toplevel_page_' . self::MENU_SLUG, $approvedFiles);
+        AdminAssets::enqueue($hookSuffix, 'toplevel_page_' . self::MENU_SLUG, $this->history->approvedSourceFiles());
     }
 
     public function handleImport(): void
@@ -216,7 +217,6 @@ final class AdminPage
                         'countries_updated' => (int) ($summary['countries_updated'] ?? 0),
                     ]
                 );
-                $this->appendImportLog($summary);
             } catch (Throwable $throwable) {
                 $this->logger->exception(
                     $throwable,
@@ -233,6 +233,67 @@ final class AdminPage
             self::TRANSIENT_PREFIX . get_current_user_id(),
             [
                 'summary' => $summary,
+                'error'   => $error,
+            ],
+            MINUTE_IN_SECONDS * 10
+        );
+
+        wp_safe_redirect(admin_url('admin.php?page=' . self::MENU_SLUG));
+        exit;
+    }
+
+    public function handleUndoImport(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('No tienes permisos para deshacer importaciones.', 'cannes-festival-medal-tracker'));
+        }
+
+        check_admin_referer(self::UNDO_NONCE_ACTION, self::UNDO_NONCE_FIELD);
+
+        $importId = isset($_POST['fmb_import_id'])
+            ? absint($_POST['fmb_import_id'])
+            : 0;
+        $summary = null;
+        $error   = '';
+
+        try {
+            $summary = $this->importer->undoImport($importId);
+
+            $this->logger->warning(
+                'Approved import was undone from admin.',
+                [
+                    'user_id'       => get_current_user_id(),
+                    'import_id'     => $importId,
+                    'source_file'   => (string) ($summary['source_file'] ?? ''),
+                    'undone_rows'   => (int) ($summary['undone_rows'] ?? 0),
+                    'undone_medals' => (int) ($summary['undone_medals'] ?? 0),
+                ]
+            );
+        } catch (Throwable $throwable) {
+            $this->logger->exception(
+                $throwable,
+                [
+                    'user_id'   => get_current_user_id(),
+                    'action'    => self::UNDO_ACTION,
+                    'import_id' => $importId,
+                ]
+            );
+            $error = $throwable instanceof RuntimeException
+                ? $throwable->getMessage()
+                : __('No se pudo deshacer la importacion. Revisa el log.', 'cannes-festival-medal-tracker');
+        }
+
+        set_transient(
+            self::TRANSIENT_PREFIX . get_current_user_id(),
+            [
+                'summary' => is_array($summary)
+                    ? [
+                        'undone'        => true,
+                        'source_file'   => (string) ($summary['source_file'] ?? ''),
+                        'undone_rows'   => (int) ($summary['undone_rows'] ?? 0),
+                        'undone_medals' => (int) ($summary['undone_medals'] ?? 0),
+                    ]
+                    : [],
                 'error'   => $error,
             ],
             MINUTE_IN_SECONDS * 10
@@ -270,8 +331,8 @@ final class AdminPage
 
         $deleted = $this->repository->deleteAll();
         $deletedImportLogEntries = count($this->getImportLog());
+        $deletedImportRows = $this->imports->deleteAll();
         delete_transient($this->previewTransientKey());
-        delete_option(self::IMPORT_LOG_OPTION);
 
         $this->logger->warning(
             'Medal standings were reset from admin.',
@@ -279,6 +340,7 @@ final class AdminPage
                 'user_id'                    => get_current_user_id(),
                 'deleted_rows'               => $deleted,
                 'deleted_import_log_entries' => $deletedImportLogEntries,
+                'deleted_import_rows'        => $deletedImportRows,
             ]
         );
 
@@ -289,6 +351,7 @@ final class AdminPage
                     'reset'                      => true,
                     'deleted_rows'               => $deleted,
                     'deleted_import_log_entries' => $deletedImportLogEntries,
+                    'deleted_import_rows'        => $deletedImportRows,
                 ],
                 'error'   => '',
             ],
@@ -332,6 +395,9 @@ final class AdminPage
             'discard_action'            => self::DISCARD_ACTION,
             'discard_nonce_action'      => self::DISCARD_NONCE_ACTION,
             'discard_nonce_field'       => self::DISCARD_NONCE_FIELD,
+            'undo_action'               => self::UNDO_ACTION,
+            'undo_nonce_action'         => self::UNDO_NONCE_ACTION,
+            'undo_nonce_field'          => self::UNDO_NONCE_FIELD,
             'reset_action'              => self::RESET_ACTION,
             'reset_nonce_action'        => self::RESET_NONCE_ACTION,
             'reset_nonce_field'         => self::RESET_NONCE_FIELD,
@@ -419,52 +485,14 @@ final class AdminPage
         throw new RuntimeException(__('Este archivo ya fue confirmado anteriormente. Vuelve a seleccionarlo y confirma que quieres continuar.', 'cannes-festival-medal-tracker'));
     }
 
-    private function appendImportLog(array $summary): void
-    {
-        $entries = $this->getImportLog();
-        array_unshift(
-            $entries,
-            [
-                'imported_at'       => current_time('mysql'),
-                'source_file'       => sanitize_file_name((string) ($summary['source_file'] ?? '')),
-                'valid_rows'        => absint($summary['valid_rows'] ?? 0),
-                'ignored_rows'      => absint($summary['ignored_rows'] ?? 0),
-                'countries_created' => absint($summary['countries_created'] ?? 0),
-                'countries_updated' => absint($summary['countries_updated'] ?? 0),
-                'user_id'           => get_current_user_id(),
-            ]
-        );
-
-        update_option(self::IMPORT_LOG_OPTION, array_slice($entries, 0, self::IMPORT_LOG_LIMIT), false);
-    }
-
     private function getImportLog(): array
     {
-        $entries = get_option(self::IMPORT_LOG_OPTION, []);
-
-        if (!is_array($entries)) {
-            return [];
-        }
-
-        return array_values(
-            array_filter(
-                $entries,
-                static function ($entry): bool {
-                    return is_array($entry);
-                }
-            )
-        );
+        return $this->history->list(self::IMPORT_LOG_LIMIT);
     }
 
     private function hasApprovedImportForFile(string $fileName): bool
     {
-        foreach ($this->getImportLog() as $entry) {
-            if ($fileName === sanitize_file_name((string) ($entry['source_file'] ?? ''))) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->history->hasApprovedFile($fileName);
     }
 
     private function logIgnoredRows(?array $summary): void

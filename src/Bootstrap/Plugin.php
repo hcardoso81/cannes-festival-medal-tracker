@@ -8,6 +8,7 @@ use FestivalMedalTracker\Application\ImportMedalsUseCase;
 use FestivalMedalTracker\Domain\Service\MedalNormalizer;
 use FestivalMedalTracker\Infrastructure\Excel\PhpSpreadsheetExcelReader;
 use FestivalMedalTracker\Infrastructure\Logging\FileLogger;
+use FestivalMedalTracker\Infrastructure\Persistence\ImportRepository;
 use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
 use FestivalMedalTracker\Infrastructure\WordPress\DatabaseInstaller;
 use FestivalMedalTracker\UI\Admin\AdminPage;
@@ -24,15 +25,18 @@ final class Plugin
         add_action('plugins_loaded', [DatabaseInstaller::class, 'maybeUpgrade']);
 
         $repository = new MedalRepository();
+        $imports    = new ImportRepository();
 
         if (is_admin()) {
             $adminPage = new AdminPage(
                 new ImportMedalsUseCase(
                     new PhpSpreadsheetExcelReader(),
                     new MedalNormalizer(),
-                    $repository
+                    $repository,
+                    $imports
                 ),
                 $repository,
+                $imports,
                 new FileLogger()
             );
             $adminPage->registerHooks();

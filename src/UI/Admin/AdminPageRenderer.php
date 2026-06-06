@@ -42,7 +42,7 @@ final class AdminPageRenderer
             <h2><?php echo esc_html__('Medallero actual', 'cannes-festival-medal-tracker'); ?></h2>
             <?php $this->widgets->renderCurrentTable($rows); ?>
 
-            <?php $this->importWorkflow->renderImportLog($importLog, $preview); ?>
+            <?php $this->importWorkflow->renderImportLog($importLog, $preview, $config); ?>
 
             <?php $this->widgets->renderResetZone($config); ?>
         </div>

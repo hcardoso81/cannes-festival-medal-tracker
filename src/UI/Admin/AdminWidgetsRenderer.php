@@ -86,7 +86,10 @@ final class AdminWidgetsRenderer
             <form
                 method="post"
                 action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
-                onsubmit="return confirm('<?php echo esc_js(__('Estas seguro de que quieres reiniciar el medallero?', 'cannes-festival-medal-tracker')); ?>');"
+                data-fmb-confirm="<?php echo esc_attr__('Estas seguro de que quieres reiniciar el medallero?', 'cannes-festival-medal-tracker'); ?>"
+                data-fmb-confirm-title="<?php echo esc_attr__('Reiniciar medallero', 'cannes-festival-medal-tracker'); ?>"
+                data-fmb-confirm-button="<?php echo esc_attr__('Reiniciar medallero', 'cannes-festival-medal-tracker'); ?>"
+                data-fmb-confirm-variant="danger"
             >
                 <input type="hidden" name="action" value="<?php echo esc_attr((string) $config['reset_action']); ?>">
                 <?php wp_nonce_field((string) $config['reset_nonce_action'], (string) $config['reset_nonce_field']); ?>
@@ -120,7 +123,7 @@ final class AdminWidgetsRenderer
 
     public function renderCountingRules(): void
     {
-        $countries = $this->importer->getAllowedCountries();
+        $countries = $this->importer->getCountedCountries();
         $synonyms  = $this->importer->getPrizeSynonyms();
         ?>
         <div class="fmb-counting-rules">

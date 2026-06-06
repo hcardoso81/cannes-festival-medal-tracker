@@ -17,17 +17,17 @@ final class MedalNormalizer
         'COLOMBIA',
         'COSTA RICA',
         'CUBA',
-        'REPÚBLICA DOMINICANA',
+        'REPUBLICA DOMINICANA',
         'ECUADOR',
         'EL SALVADOR',
         'GUATEMALA',
-        'HAITÍ',
+        'HAITI',
         'HONDURAS',
-        'MÉXICO',
+        'MEXICO',
         'NICARAGUA',
-        'PANAMÁ',
+        'PANAMA',
         'PARAGUAY',
-        'PERÚ',
+        'PERU',
         'PUERTO RICO',
         'URUGUAY',
         'VENEZUELA',
@@ -130,6 +130,11 @@ final class MedalNormalizer
         return is_array($filtered) ? array_values($filtered) : $countries;
     }
 
+    public function getCountedCountries(): array
+    {
+        return array_values($this->getAllowedCountryMap());
+    }
+
     public function getPrizeSynonyms(): array
     {
         $synonyms = self::DEFAULT_PRIZE_SYNONYMS;
@@ -153,11 +158,10 @@ final class MedalNormalizer
         $countries = [];
 
         foreach ($this->getAllowedCountries() as $country) {
-            $country = $this->normalizeCountry((string) $country);
-            $key     = $this->countryKey($country);
+            $key = $this->countryKey((string) $country);
 
             if ('' !== $key && !isset($countries[$key])) {
-                $countries[$key] = $country;
+                $countries[$key] = $key;
             }
         }
 

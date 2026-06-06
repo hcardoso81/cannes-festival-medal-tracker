@@ -10,7 +10,7 @@ Context for AI agents and developers working on this WordPress plugin.
 - Text domain: `cannes-festival-medal-tracker`.
 - Version: `1.0.0`.
 - Objective: import Excel festival results, aggregate medals by country, persist totals in a custom table and render standings through shortcodes.
-- Database table: `{prefix}_fmb_country_medals`.
+- Database tables: `{prefix}_fmb_country_medals`, `{prefix}_fmb_imports`, `{prefix}_fmb_import_country_medals`.
 - Dependency: `phpoffice/phpspreadsheet` through Composer.
 - Error log: `logs/fmb-error.log`.
 - README technology chips: visual Shields.io badges with colors and logos for WordPress, PHP 7.4+, Composer, PhpSpreadsheet/Excel Import, MySQL/custom tables, HTML and CSS.
@@ -57,11 +57,14 @@ Imports are handled through `admin-post.php` with action `fmb_import_medals`. Th
 8. Store a pending preview in a user-scoped transient without writing to the database.
 9. Delete the temporary uploaded file.
 10. Redirect back to the admin page with a transient-backed summary.
-11. Persist only after `fmb_approve_import_preview` validates capability, nonce and browser-confirmed POST.
-12. Record approved imports in a persistent admin import log with source filename, approval date and summary counts.
-13. Allow pending previews to be discarded with `fmb_discard_import_preview`, capability, nonce and browser-confirmed POST.
+11. Persist only after `fmb_approve_import_preview` validates capability, nonce and a custom HTML confirmation modal POST.
+12. Record approved imports in database tables with source filename, approval date, summary counts and per-country medal deltas.
+13. Allow approved imports with stored deltas to be undone through `fmb_undo_import`, capability, nonce and a custom HTML confirmation modal POST. Undo must subtract only the medals contributed by that import, then remove that import and its stored deltas from the import history so it no longer appears as something that was imported before.
+14. Allow pending previews to be discarded with `fmb_discard_import_preview`, capability, nonce and a custom HTML confirmation modal POST.
 
 The upload form must keep **Generar vista previa** disabled until a file has been selected. This is a UI convenience only; server-side upload validation remains required.
+
+All admin confirmations must use the plugin custom HTML confirmation modal instead of native `window.confirm()`. This applies to approval, discard, undo, reset and duplicate-file warnings. Keep confirmation messages attached to forms or actions declaratively, e.g. with `data-fmb-confirm` attributes, and centralize modal behavior in the admin assets.
 
 Processed rows must keep enough debug context: spreadsheet row number, raw `location`, raw `prize`, status, counted countries, ignored countries and reason when applicable. Show sanitized details in the pending preview, not duplicated in the admin notice. The upload/admin notice should remain a short confirmation that the Excel file was processed. Ignored row details must still be written to `logs/fmb-error.log`.
 
@@ -74,9 +77,9 @@ When one `location` cell contains multiple country values separated by `/`, the 
 
 Imports are two-step by design: preview first, then approve and merge. Do not write imported medal totals to the database during upload processing. A pending preview can be discarded without touching persisted medal data.
 
-The admin page must show a **Registro de importaciones** for approved imports. The register must clearly distinguish a pending preview from approved imports: pending files are marked as not merged/not saved yet, while the approved history is collapsible and lists only approved imports. Discarded previews must not be added to this history.
+The admin page must show a **Registro de importaciones** for approved imports. The register must clearly distinguish a pending preview from approved imports: pending files are marked as not merged/not saved yet, while the approved history is collapsible and lists only active approved imports from the import tables. Discarded previews must not be added to this history. Approved imports with stored deltas must expose a **Deshacer** action while they are still approved. Once an import is undone, remove it from the visible register and from duplicate-file detection so users do not see stale evidence that it was imported before. Ignore legacy `wp_options` import history; old test data does not need to be migrated or shown.
 
-The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for browser confirmation and log deleted row count. Reset must also clear any pending preview and the approved import log, then log how many approved import history entries were removed.
+The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for custom HTML modal confirmation and log deleted row count. Reset must also clear any pending preview and the approved import log tables, then log how many approved import history entries were removed.
 
 ## Shortcodes
 
@@ -115,22 +118,22 @@ Only the configured Hispanoamerica country allowlist is counted:
 - `COLOMBIA`
 - `COSTA RICA`
 - `CUBA`
-- `REPÚBLICA DOMINICANA`
+- `REPUBLICA DOMINICANA`
 - `ECUADOR`
 - `EL SALVADOR`
 - `GUATEMALA`
-- `HAITÍ`
+- `HAITI`
 - `HONDURAS`
-- `MÉXICO`
+- `MEXICO`
 - `NICARAGUA`
-- `PANAMÁ`
+- `PANAMA`
 - `PARAGUAY`
-- `PERÚ`
+- `PERU`
 - `PUERTO RICO`
 - `URUGUAY`
 - `VENEZUELA`
 
-Brazil and all other countries are ignored. Country matching is case-insensitive and accent-insensitive. Extend or replace the list with the `fmb_allowed_countries` filter. The admin page must display the current counted countries and prize values before import.
+Brazil and all other countries are ignored. Country matching is case-insensitive and accent-insensitive. Counted country labels are stored and displayed as the accent-free uppercase comparison key, e.g. `MEXICO`, `PERU`, `REPUBLICA DOMINICANA`. Extend or replace the list with the `fmb_allowed_countries` filter. The admin page must display the current counted countries and prize values before import.
 
 ## Logging
 
@@ -147,7 +150,8 @@ Rules:
 ## Security Rules
 
 - Never process an admin request without capability and nonce checks.
-- Destructive admin actions must include nonce, capability check, confirmation UI and plugin log entry.
+- Destructive admin actions must include nonce, capability check, custom HTML confirmation UI and plugin log entry.
+- Do not use native `window.confirm()` for plugin admin actions; use the shared HTML modal confirmation flow.
 - Never trust uploaded filenames or MIME values alone.
 - Use `wp_check_filetype_and_ext` and `wp_handle_upload` for Excel uploads.
 - Delete imported upload files after processing.
