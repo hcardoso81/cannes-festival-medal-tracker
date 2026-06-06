@@ -81,6 +81,20 @@ The admin page must show a **Registro de importaciones** for approved imports. T
 
 The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for custom HTML modal confirmation and log deleted row count. Reset must also clear any pending preview and the approved import log tables, then log how many approved import history entries were removed.
 
+## Frontend Publication Flow
+
+Frontend output is intentionally embargoed from the import workflow. Approved imports update the internal medal table, but shortcodes must render only the last manually published frontend snapshot.
+
+The admin must expose a separate **Frontend** view under Medal Tracker. This view must include:
+
+- A checkbox to enable or disable shortcode rendering. Enabled means shortcodes render the published snapshot; disabled means shortcode output is hidden.
+- A **Publicar datos** action that copies the current internal medal table into the published frontend snapshot.
+- A preview of the currently published medal table.
+- A preview of pending changes between the published snapshot and the internal medal table.
+- A preview of how the frontend will look after publishing the current internal medal table.
+
+The publish action must validate `manage_options`, verify nonce, use the shared custom HTML confirmation modal and log the publication. Imports after publication must not affect shortcode output until the next manual publish action.
+
 ## Shortcodes
 
 Register both requested camel-case names and lowercase aliases:
@@ -94,6 +108,7 @@ Register both requested camel-case names and lowercase aliases:
 
 All shortcode output must be escaped and should use semantic tables with `fmb-` CSS classes.
 Medal ordering is GP, Gold, Silver and Bronze.
+Shortcodes must read from the published frontend snapshot, not directly from the mutable internal import table. If frontend rendering is disabled, shortcodes should return no visible output.
 
 ## Prize Synonyms
 

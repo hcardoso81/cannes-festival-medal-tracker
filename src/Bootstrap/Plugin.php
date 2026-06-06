@@ -8,10 +8,12 @@ use FestivalMedalTracker\Application\ImportMedalsUseCase;
 use FestivalMedalTracker\Domain\Service\MedalNormalizer;
 use FestivalMedalTracker\Infrastructure\Excel\PhpSpreadsheetExcelReader;
 use FestivalMedalTracker\Infrastructure\Logging\FileLogger;
+use FestivalMedalTracker\Infrastructure\Persistence\FrontendPublicationRepository;
 use FestivalMedalTracker\Infrastructure\Persistence\ImportRepository;
 use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
 use FestivalMedalTracker\Infrastructure\WordPress\DatabaseInstaller;
 use FestivalMedalTracker\UI\Admin\AdminPage;
+use FestivalMedalTracker\UI\Admin\FrontendAdminPage;
 use FestivalMedalTracker\UI\Frontend\Shortcodes;
 
 if (!defined('ABSPATH')) {
@@ -26,8 +28,10 @@ final class Plugin
 
         $repository = new MedalRepository();
         $imports    = new ImportRepository();
+        $publication = new FrontendPublicationRepository();
 
         if (is_admin()) {
+            $logger = new FileLogger();
             $adminPage = new AdminPage(
                 new ImportMedalsUseCase(
                     new PhpSpreadsheetExcelReader(),
@@ -37,11 +41,13 @@ final class Plugin
                 ),
                 $repository,
                 $imports,
-                new FileLogger()
+                $logger
             );
             $adminPage->registerHooks();
+
+            (new FrontendAdminPage($repository, $publication, $logger))->registerHooks();
         }
 
-        (new Shortcodes($repository))->registerHooks();
+        (new Shortcodes($publication))->registerHooks();
     }
 }

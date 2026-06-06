@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FestivalMedalTracker\UI\Frontend;
 
-use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
+use FestivalMedalTracker\Infrastructure\Persistence\FrontendPublicationRepository;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -12,11 +12,11 @@ if (!defined('ABSPATH')) {
 
 final class Shortcodes
 {
-    private MedalRepository $repository;
+    private FrontendPublicationRepository $publication;
 
-    public function __construct(MedalRepository $repository)
+    public function __construct(FrontendPublicationRepository $publication)
     {
-        $this->repository = $repository;
+        $this->publication = $publication;
     }
 
     public function registerHooks(): void
@@ -31,8 +31,12 @@ final class Shortcodes
 
     public function renderMedalByCountry(): string
     {
+        if (!$this->publication->isEnabled()) {
+            return '';
+        }
+
         $this->enqueueAssets();
-        $rows = $this->repository->getCountryTotals();
+        $rows = $this->publication->getCountryTotals();
 
         if (empty($rows)) {
             return $this->emptyMessage();
@@ -63,8 +67,18 @@ final class Shortcodes
 
     public function renderMedalsTotal(): string
     {
+        if (!$this->publication->isEnabled()) {
+            return '';
+        }
+
         $this->enqueueAssets();
-        $totals = $this->repository->getMedalTotals();
+        $publishedRows = $this->publication->getPublishedRows();
+
+        if (empty($publishedRows)) {
+            return $this->emptyMessage();
+        }
+
+        $totals = $this->publication->getMedalTotals();
 
         ob_start();
         ?>
@@ -101,8 +115,12 @@ final class Shortcodes
 
     public function renderMedalByCountryDetail(): string
     {
+        if (!$this->publication->isEnabled()) {
+            return '';
+        }
+
         $this->enqueueAssets();
-        $rows = $this->repository->getCountryDetails();
+        $rows = $this->publication->getPublishedRows();
 
         if (empty($rows)) {
             return $this->emptyMessage();
@@ -141,6 +159,10 @@ final class Shortcodes
 
     private function enqueueAssets(): void
     {
+        if (!$this->publication->isEnabled()) {
+            return;
+        }
+
         wp_enqueue_style(
             'fmb-frontend',
             FMB_URL . 'assets/css/frontend.css',
@@ -151,6 +173,10 @@ final class Shortcodes
 
     private function emptyMessage(): string
     {
+        if (!$this->publication->isEnabled()) {
+            return '';
+        }
+
         return '<p class="fmb-empty">' . esc_html__('Todavia no se importaron medallas.', 'cannes-festival-medal-tracker') . '</p>';
     }
 }

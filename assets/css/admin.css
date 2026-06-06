@@ -205,6 +205,66 @@
     color: #b32d2e;
 }
 
+.fmb-frontend-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    max-width: 1040px;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+}
+
+.fmb-frontend-controls form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.fmb-toggle-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 600;
+}
+
+.fmb-frontend-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 0.75rem;
+    max-width: 1040px;
+    margin: 1rem 0 1.5rem;
+}
+
+.fmb-frontend-summary > div {
+    padding: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+}
+
+.fmb-frontend-summary strong,
+.fmb-frontend-summary span {
+    display: block;
+}
+
+.fmb-frontend-summary strong {
+    margin-bottom: 0.25rem;
+}
+
+.fmb-delta-table td:not(:first-child) {
+    font-weight: 600;
+}
+
+@media (max-width: 782px) {
+    .fmb-frontend-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
 body.fmb-confirm-modal-open {
     overflow: hidden;
 }
