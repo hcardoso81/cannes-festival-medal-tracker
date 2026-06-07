@@ -46,7 +46,7 @@ final class Plugin
             );
             $adminPage->registerHooks();
 
-            (new FrontendAdminPage($repository, $publication, $logger))->registerHooks();
+            (new FrontendAdminPage($repository, $publication, $imports, $logger))->registerHooks();
         }
 
         (new Shortcodes($publication))->registerHooks();

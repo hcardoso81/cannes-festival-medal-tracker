@@ -97,6 +97,7 @@ The admin must expose a separate **Frontend** view under Medal Tracker. This vie
 - A preview of the currently published medal table.
 - A preview of pending changes between the published snapshot and the internal medal table.
 - A preview of how the frontend will look after publishing the current internal medal table.
+- A summary card listing approved source filenames that have not yet been included in the last frontend publication.
 
 The publish action must validate `manage_options`, verify nonce, use the shared custom HTML confirmation modal and log the publication. Imports after publication must not affect shortcode output until the next manual publish action.
 

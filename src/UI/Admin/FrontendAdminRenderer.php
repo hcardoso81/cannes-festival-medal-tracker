@@ -10,11 +10,19 @@ if (!defined('ABSPATH')) {
 
 final class FrontendAdminRenderer
 {
+    private AdminTabsRenderer $tabs;
+
+    public function __construct()
+    {
+        $this->tabs = new AdminTabsRenderer();
+    }
+
     public function render(array $state, array $notice, array $config): void
     {
         ?>
         <div class="wrap fmb-admin-page">
             <h1><?php echo esc_html__('Frontend del medallero', 'cannes-festival-medal-tracker'); ?></h1>
+            <?php $this->tabs->render('frontend'); ?>
             <?php $this->renderNotice($notice); ?>
             <?php $this->renderControls($state, $config); ?>
             <?php $this->renderSnapshotSummary($state); ?>
@@ -106,10 +114,30 @@ final class FrontendAdminRenderer
                 </span>
             </div>
             <div>
-                <strong><?php echo esc_html__('Cambios pendientes', 'cannes-festival-medal-tracker'); ?></strong>
-                <span><?php echo esc_html((string) count($state['pending_changes'] ?? [])); ?></span>
+                <strong><?php echo esc_html__('Archivos a publicar', 'cannes-festival-medal-tracker'); ?></strong>
+                <?php $this->renderPendingFiles($state['pending_files'] ?? []); ?>
             </div>
         </div>
+        <?php
+    }
+
+    private function renderPendingFiles(array $files): void
+    {
+        $files = array_values(array_filter(array_map('strval', $files)));
+
+        if (empty($files)) {
+            ?>
+            <span><?php echo esc_html__('Sin archivos pendientes', 'cannes-festival-medal-tracker'); ?></span>
+            <?php
+            return;
+        }
+
+        ?>
+        <ul class="fmb-pending-file-list">
+            <?php foreach ($files as $file) : ?>
+                <li><?php echo esc_html($file); ?></li>
+            <?php endforeach; ?>
+        </ul>
         <?php
     }
 

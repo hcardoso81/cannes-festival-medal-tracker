@@ -6,6 +6,7 @@ namespace FestivalMedalTracker\UI\Admin;
 
 use FestivalMedalTracker\Infrastructure\Logging\FileLogger;
 use FestivalMedalTracker\Infrastructure\Persistence\FrontendPublicationRepository;
+use FestivalMedalTracker\Infrastructure\Persistence\ImportRepository;
 use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
 use Throwable;
 
@@ -29,6 +30,8 @@ final class FrontendAdminPage
 
     private FrontendPublicationRepository $publication;
 
+    private ImportRepository $imports;
+
     private FileLogger $logger;
 
     private FrontendAdminRenderer $renderer;
@@ -38,10 +41,12 @@ final class FrontendAdminPage
     public function __construct(
         MedalRepository $medals,
         FrontendPublicationRepository $publication,
+        ImportRepository $imports,
         FileLogger $logger
     ) {
         $this->medals = $medals;
         $this->publication = $publication;
+        $this->imports = $imports;
         $this->logger = $logger;
         $this->renderer = new FrontendAdminRenderer();
     }
@@ -151,11 +156,13 @@ final class FrontendAdminPage
         $notice = get_transient($this->noticeTransientKey());
         delete_transient($this->noticeTransientKey());
         $liveRows = $this->medals->getCountryDetails();
+        $publishedAt = $this->publication->getPublishedAt();
         $state = [
             'enabled'         => $this->publication->isEnabled(),
-            'published_at'    => $this->publication->getPublishedAt(),
+            'published_at'    => $publishedAt,
             'published_rows'  => $this->publication->getPublishedRows(),
             'pending_changes' => $this->publication->getPendingChanges($liveRows),
+            'pending_files'   => $this->imports->listSourceFilesPendingPublication($publishedAt),
             'live_rows'       => $liveRows,
         ];
 

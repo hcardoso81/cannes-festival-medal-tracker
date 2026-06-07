@@ -128,6 +128,39 @@ final class ImportRepository
         return is_array($rows) ? array_map('strval', $rows) : [];
     }
 
+    public function listSourceFilesPendingPublication(string $publishedAt): array
+    {
+        global $wpdb;
+
+        if ('' === $publishedAt) {
+            $rows = $wpdb->get_col(
+                $wpdb->prepare(
+                    'SELECT source_file
+                    FROM ' . DatabaseInstaller::importsTableName() . '
+                    WHERE status = %s
+                    ORDER BY imported_at DESC, id DESC',
+                    'approved'
+                )
+            );
+
+            return is_array($rows) ? array_map('strval', $rows) : [];
+        }
+
+        $rows = $wpdb->get_col(
+            $wpdb->prepare(
+                'SELECT source_file
+                FROM ' . DatabaseInstaller::importsTableName() . '
+                WHERE status = %s
+                    AND imported_at > %s
+                ORDER BY imported_at DESC, id DESC',
+                'approved',
+                $publishedAt
+            )
+        );
+
+        return is_array($rows) ? array_map('strval', $rows) : [];
+    }
+
     public function deleteImport(int $importId): int
     {
         global $wpdb;
