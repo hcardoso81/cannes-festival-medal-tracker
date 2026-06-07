@@ -37,7 +37,7 @@ final class AdminShortcodePreviewRenderer
             return;
         }
 
-        $rows = $this->sortByTotal($rows);
+        $rows = $this->sortByMedals($rows);
         ?>
         <table class="widefat striped fmb-admin-standings">
             <thead>
@@ -130,19 +130,6 @@ final class AdminShortcodePreviewRenderer
         <?php
     }
 
-    private function sortByTotal(array $rows): array
-    {
-        usort(
-            $rows,
-            static function (array $a, array $b): int {
-                return absint($b['total'] ?? 0) <=> absint($a['total'] ?? 0)
-                    ?: strcmp((string) ($a['country'] ?? ''), (string) ($b['country'] ?? ''));
-            }
-        );
-
-        return $rows;
-    }
-
     private function sortByMedals(array $rows): array
     {
         usort(
@@ -152,6 +139,7 @@ final class AdminShortcodePreviewRenderer
                     ?: absint($b['gold'] ?? 0) <=> absint($a['gold'] ?? 0)
                     ?: absint($b['silver'] ?? 0) <=> absint($a['silver'] ?? 0)
                     ?: absint($b['bronze'] ?? 0) <=> absint($a['bronze'] ?? 0)
+                    ?: absint($b['total'] ?? 0) <=> absint($a['total'] ?? 0)
                     ?: strcmp((string) ($a['country'] ?? ''), (string) ($b['country'] ?? ''));
             }
         );

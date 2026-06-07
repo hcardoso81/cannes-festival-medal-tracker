@@ -391,6 +391,7 @@ final class ImportPreviewRenderer
                     ?: absint($b['gold'] ?? 0) <=> absint($a['gold'] ?? 0)
                     ?: absint($b['silver'] ?? 0) <=> absint($a['silver'] ?? 0)
                     ?: absint($b['bronze'] ?? 0) <=> absint($a['bronze'] ?? 0)
+                    ?: absint($b['total'] ?? 0) <=> absint($a['total'] ?? 0)
                     ?: strcmp((string) ($a['country'] ?? ''), (string) ($b['country'] ?? ''));
             }
         );

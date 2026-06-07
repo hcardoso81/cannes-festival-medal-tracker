@@ -84,7 +84,7 @@ The pending preview widget itself must be collapsible/minimizable. Use a distinc
 
 The admin page must show a **Registro de importaciones** for approved imports. The register must clearly distinguish a pending preview from approved imports: pending files are marked as not merged/not saved yet, while the approved history is collapsible and lists only active approved imports from the import tables. Discarded previews must not be added to this history. Approved imports with stored deltas must expose a **Deshacer** action while they are still approved. Once an import is undone, remove it from the visible register and from duplicate-file detection so users do not see stale evidence that it was imported before. Ignore legacy `wp_options` import history; old test data does not need to be migrated or shown.
 
-The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for custom HTML modal confirmation and log deleted row count. Reset must also clear any pending preview and the approved import log tables, then log how many approved import history entries were removed.
+The admin page includes a destructive reset action with action `fmb_reset_medals`. It must always validate `manage_options`, verify nonce `fmb_reset_medals_nonce`, ask for custom HTML modal confirmation and log deleted row count. Reset must also clear any pending preview, approved import log tables, frontend published snapshot and frontend published date, then log how many approved import history entries and published frontend rows were removed.
 
 ## Frontend Publication Flow
 
@@ -113,6 +113,7 @@ Register both requested camel-case names and lowercase aliases:
 
 All shortcode output must be escaped and should use semantic tables with `fmb-` CSS classes.
 Medal ordering is GP, Gold, Silver and Bronze.
+Country ranking must use medal hierarchy, not raw total first: GP first, then Gold, then Silver, then Bronze, then Total as a tiebreaker, then country name.
 Shortcodes must read from the published frontend snapshot, not directly from the mutable internal import table. If frontend rendering is disabled, shortcodes should return no visible output.
 
 ## Prize Synonyms

@@ -46,6 +46,16 @@ final class FrontendPublicationRepository
         update_option(self::PUBLISHED_AT_OPTION, current_time('mysql'), false);
     }
 
+    public function clearPublishedData(): int
+    {
+        $deletedRows = count($this->getPublishedRows());
+
+        delete_option(self::SNAPSHOT_OPTION);
+        delete_option(self::PUBLISHED_AT_OPTION);
+
+        return $deletedRows;
+    }
+
     public function getCountryTotals(): array
     {
         return array_map(
@@ -140,6 +150,7 @@ final class FrontendPublicationRepository
                     ?: (int) $b['gold'] <=> (int) $a['gold']
                     ?: (int) $b['silver'] <=> (int) $a['silver']
                     ?: (int) $b['bronze'] <=> (int) $a['bronze']
+                    ?: (int) $b['total'] <=> (int) $a['total']
                     ?: strcmp((string) $a['country'], (string) $b['country']);
             }
         );

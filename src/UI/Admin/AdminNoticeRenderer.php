@@ -77,10 +77,11 @@ final class AdminNoticeRenderer
                 <?php
                 echo esc_html(
                     sprintf(
-                        /* translators: 1: deleted database rows, 2: deleted approved import log entries. */
-                        __('Reinicio del medallero completado. Filas eliminadas: %1$d. Registros de importaciones aprobadas eliminados: %2$d.', 'cannes-festival-medal-tracker'),
+                        /* translators: 1: deleted database rows, 2: deleted approved import log entries, 3: deleted published frontend rows. */
+                        __('Reinicio del medallero completado. Filas eliminadas: %1$d. Registros de importaciones aprobadas eliminados: %2$d. Filas publicadas del frontend limpiadas: %3$d.', 'cannes-festival-medal-tracker'),
                         (int) ($summary['deleted_rows'] ?? 0),
-                        (int) ($summary['deleted_import_log_entries'] ?? 0)
+                        (int) ($summary['deleted_import_log_entries'] ?? 0),
+                        (int) ($summary['deleted_published_rows'] ?? 0)
                     )
                 );
                 ?>

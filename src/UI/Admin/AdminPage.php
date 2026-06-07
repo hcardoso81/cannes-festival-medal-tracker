@@ -6,6 +6,7 @@ namespace FestivalMedalTracker\UI\Admin;
 
 use FestivalMedalTracker\Application\ImportMedalsUseCase;
 use FestivalMedalTracker\Infrastructure\Logging\FileLogger;
+use FestivalMedalTracker\Infrastructure\Persistence\FrontendPublicationRepository;
 use FestivalMedalTracker\Infrastructure\Persistence\ImportRepository;
 use FestivalMedalTracker\Infrastructure\Persistence\MedalRepository;
 use RuntimeException;
@@ -44,6 +45,8 @@ final class AdminPage
 
     private ImportRepository $imports;
 
+    private FrontendPublicationRepository $publication;
+
     private FileLogger $logger;
 
     private AdminPageRenderer $renderer;
@@ -54,11 +57,13 @@ final class AdminPage
         ImportMedalsUseCase $importer,
         MedalRepository $repository,
         ImportRepository $imports,
+        FrontendPublicationRepository $publication,
         FileLogger $logger
     ) {
         $this->importer   = $importer;
         $this->repository = $repository;
         $this->imports    = $imports;
+        $this->publication = $publication;
         $this->logger     = $logger;
         $this->renderer   = new AdminPageRenderer($importer, $repository);
         $this->history    = new AdminImportHistory($imports);
@@ -332,6 +337,7 @@ final class AdminPage
         $deleted = $this->repository->deleteAll();
         $deletedImportLogEntries = count($this->getImportLog());
         $deletedImportRows = $this->imports->deleteAll();
+        $deletedPublishedRows = $this->publication->clearPublishedData();
         delete_transient($this->previewTransientKey());
 
         $this->logger->warning(
@@ -341,6 +347,7 @@ final class AdminPage
                 'deleted_rows'               => $deleted,
                 'deleted_import_log_entries' => $deletedImportLogEntries,
                 'deleted_import_rows'        => $deletedImportRows,
+                'deleted_published_rows'     => $deletedPublishedRows,
             ]
         );
 
@@ -352,6 +359,7 @@ final class AdminPage
                     'deleted_rows'               => $deleted,
                     'deleted_import_log_entries' => $deletedImportLogEntries,
                     'deleted_import_rows'        => $deletedImportRows,
+                    'deleted_published_rows'     => $deletedPublishedRows,
                 ],
                 'error'   => '',
             ],

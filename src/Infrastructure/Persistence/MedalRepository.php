@@ -111,7 +111,7 @@ final class MedalRepository
         return $wpdb->get_results(
             "SELECT country, (gp + gold + silver + bronze) AS total
             FROM {$tableName}
-            ORDER BY total DESC, country ASC",
+            ORDER BY gp DESC, gold DESC, silver DESC, bronze DESC, total DESC, country ASC",
             ARRAY_A
         ) ?: [];
     }
@@ -143,7 +143,7 @@ final class MedalRepository
         return $wpdb->get_results(
             "SELECT country, gp, gold, silver, bronze, (gp + gold + silver + bronze) AS total
             FROM {$tableName}
-            ORDER BY gp DESC, gold DESC, silver DESC, bronze DESC, country ASC",
+            ORDER BY gp DESC, gold DESC, silver DESC, bronze DESC, total DESC, country ASC",
             ARRAY_A
         ) ?: [];
     }

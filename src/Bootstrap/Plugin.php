@@ -41,6 +41,7 @@ final class Plugin
                 ),
                 $repository,
                 $imports,
+                $publication,
                 $logger
             );
             $adminPage->registerHooks();
