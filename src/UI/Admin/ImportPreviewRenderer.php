@@ -14,9 +14,12 @@ final class ImportPreviewRenderer
 {
     private MedalRepository $repository;
 
+    private AdminShortcodePreviewRenderer $shortcodes;
+
     public function __construct(MedalRepository $repository)
     {
         $this->repository = $repository;
+        $this->shortcodes = new AdminShortcodePreviewRenderer();
     }
 
     public function render(array $preview, array $config): void
@@ -26,6 +29,7 @@ final class ImportPreviewRenderer
         }
 
         $imported = is_array($preview['imported'] ?? null) ? $preview['imported'] : [];
+        $accumulatedRows = $this->previewRowsAfterImport($imported);
         $hasDetectedMedals = $this->hasDetectedMedals($preview);
         $approveConfirmation = $hasDetectedMedals
             ? __('Aprobar y continuar? Esto va a combinar la vista previa con el medallero guardado.', 'cannes-festival-medal-tracker')
@@ -34,8 +38,11 @@ final class ImportPreviewRenderer
             ? __('Aprobar y continuar', 'cannes-festival-medal-tracker')
             : __('Aprobar y guardar en historial', 'cannes-festival-medal-tracker');
         ?>
-        <div class="<?php echo esc_attr($hasDetectedMedals ? 'fmb-import-preview' : 'fmb-import-preview fmb-import-preview--empty'); ?>">
-            <h2><?php echo esc_html__('Vista previa pendiente de importacion', 'cannes-festival-medal-tracker'); ?></h2>
+        <details class="<?php echo esc_attr($hasDetectedMedals ? 'fmb-import-preview' : 'fmb-import-preview fmb-import-preview--empty'); ?>" open>
+            <summary class="fmb-import-preview__summary">
+                <?php echo esc_html__('Vista previa pendiente de importacion', 'cannes-festival-medal-tracker'); ?>
+            </summary>
+            <div class="fmb-import-preview__body">
             <?php if (!empty($preview['source_file'])) : ?>
                 <p>
                     <strong><?php echo esc_html__('Archivo procesado:', 'cannes-festival-medal-tracker'); ?></strong>
@@ -78,6 +85,24 @@ final class ImportPreviewRenderer
                 </summary>
                 <?php $this->renderPreviewMedalsTable($imported); ?>
             </details>
+            <details class="fmb-accordion" open>
+                <summary>
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: %d: country rows after applying the preview. */
+                            __('Medallero acumulado si apruebas: %d paises. Ver detalle.', 'cannes-festival-medal-tracker'),
+                            count($accumulatedRows)
+                        )
+                    );
+                    ?>
+                </summary>
+                <?php $this->renderAccumulatedMedalsTable($accumulatedRows); ?>
+            </details>
+            <div class="fmb-preview-shortcodes">
+                <h3><?php echo esc_html__('Shortcodes si apruebas esta importacion', 'cannes-festival-medal-tracker'); ?></h3>
+                <?php $this->shortcodes->render($accumulatedRows); ?>
+            </div>
             <div class="fmb-preview-actions">
                 <form
                     method="post"
@@ -102,7 +127,8 @@ final class ImportPreviewRenderer
                     <?php submit_button(__('Descartar', 'cannes-festival-medal-tracker'), 'secondary', 'submit', false); ?>
                 </form>
             </div>
-        </div>
+            </div>
+        </details>
         <?php
     }
 
@@ -266,6 +292,110 @@ final class ImportPreviewRenderer
             </tbody>
         </table>
         <?php
+    }
+
+    private function renderAccumulatedMedalsTable(array $rows): void
+    {
+        if (empty($rows)) {
+            ?>
+            <p class="fmb-empty-preview">
+                <?php echo esc_html__('No hay medallas acumuladas para mostrar.', 'cannes-festival-medal-tracker'); ?>
+            </p>
+            <?php
+            return;
+        }
+
+        ?>
+        <table class="widefat striped fmb-admin-standings">
+            <thead>
+                <tr>
+                    <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($rows as $row) : ?>
+                    <tr>
+                        <td><?php echo esc_html((string) ($row['country'] ?? '')); ?></td>
+                        <td><?php echo esc_html((string) absint($row['gp'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($row['gold'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($row['silver'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($row['bronze'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($row['total'] ?? 0)); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php
+    }
+
+    private function previewRowsAfterImport(array $items): array
+    {
+        $rows = [];
+
+        foreach ($this->repository->getCountryDetails() as $row) {
+            $country = (string) ($row['country'] ?? '');
+
+            if ('' === $country) {
+                continue;
+            }
+
+            $rows[$country] = [
+                'country' => $country,
+                'gp'      => absint($row['gp'] ?? 0),
+                'gold'    => absint($row['gold'] ?? 0),
+                'silver'  => absint($row['silver'] ?? 0),
+                'bronze'  => absint($row['bronze'] ?? 0),
+                'total'   => absint($row['total'] ?? 0),
+            ];
+        }
+
+        foreach ($items as $item) {
+            $country = (string) ($item['country'] ?? '');
+            $medals = is_array($item['medals'] ?? null) ? $item['medals'] : [];
+
+            if ('' === $country) {
+                continue;
+            }
+
+            if (!isset($rows[$country])) {
+                $rows[$country] = [
+                    'country' => $country,
+                    'gp'      => 0,
+                    'gold'    => 0,
+                    'silver'  => 0,
+                    'bronze'  => 0,
+                    'total'   => 0,
+                ];
+            }
+
+            $rows[$country]['gp'] += absint($medals['gp'] ?? 0);
+            $rows[$country]['gold'] += absint($medals['gold'] ?? 0);
+            $rows[$country]['silver'] += absint($medals['silver'] ?? 0);
+            $rows[$country]['bronze'] += absint($medals['bronze'] ?? 0);
+            $rows[$country]['total'] = $rows[$country]['gp']
+                + $rows[$country]['gold']
+                + $rows[$country]['silver']
+                + $rows[$country]['bronze'];
+        }
+
+        $rows = array_values($rows);
+        usort(
+            $rows,
+            static function (array $a, array $b): int {
+                return absint($b['gp'] ?? 0) <=> absint($a['gp'] ?? 0)
+                    ?: absint($b['gold'] ?? 0) <=> absint($a['gold'] ?? 0)
+                    ?: absint($b['silver'] ?? 0) <=> absint($a['silver'] ?? 0)
+                    ?: absint($b['bronze'] ?? 0) <=> absint($a['bronze'] ?? 0)
+                    ?: strcmp((string) ($a['country'] ?? ''), (string) ($b['country'] ?? ''));
+            }
+        );
+
+        return $rows;
     }
 
     private function hasDetectedMedals(array $summary): bool

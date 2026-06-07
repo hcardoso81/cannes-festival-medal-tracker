@@ -18,7 +18,12 @@ final class FrontendAdminRenderer
             <?php $this->renderNotice($notice); ?>
             <?php $this->renderControls($state, $config); ?>
             <?php $this->renderSnapshotSummary($state); ?>
-            <?php $this->renderPreviewWidget($state); ?>
+            <h2><?php echo esc_html__('Medallero publicado actual', 'cannes-festival-medal-tracker'); ?></h2>
+            <?php $this->renderMedalTable($state['published_rows'] ?? [], __('Todavia no hay datos publicados en el frontend.', 'cannes-festival-medal-tracker')); ?>
+            <h2><?php echo esc_html__('Cambios pendientes para publicar', 'cannes-festival-medal-tracker'); ?></h2>
+            <?php $this->renderDeltaTable($state['pending_changes'] ?? []); ?>
+            <h2><?php echo esc_html__('Asi quedaria despues de publicar', 'cannes-festival-medal-tracker'); ?></h2>
+            <?php $this->renderMedalTable($state['live_rows'] ?? [], __('El medallero interno esta vacio.', 'cannes-festival-medal-tracker')); ?>
         </div>
         <?php
     }
@@ -68,13 +73,13 @@ final class FrontendAdminRenderer
             <form
                 method="post"
                 action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
-                data-fmb-confirm="<?php echo esc_attr__('Publicar ahora el medallero interno? Los shortcodes empezaran a mostrar este nuevo lote publicado.', 'cannes-festival-medal-tracker'); ?>"
-                data-fmb-confirm-title="<?php echo esc_attr__('Publicar datos del frontend', 'cannes-festival-medal-tracker'); ?>"
-                data-fmb-confirm-button="<?php echo esc_attr__('Publicar datos', 'cannes-festival-medal-tracker'); ?>"
+                data-fmb-confirm="<?php echo esc_attr__('Publicar ahora los datos pendientes? Los shortcodes empezaran a mostrar este nuevo lote publicado.', 'cannes-festival-medal-tracker'); ?>"
+                data-fmb-confirm-title="<?php echo esc_attr__('Publicar datos pendientes', 'cannes-festival-medal-tracker'); ?>"
+                data-fmb-confirm-button="<?php echo esc_attr__('Publicar datos pendientes', 'cannes-festival-medal-tracker'); ?>"
             >
                 <input type="hidden" name="action" value="<?php echo esc_attr((string) $config['publish_action']); ?>">
                 <?php wp_nonce_field((string) $config['publish_nonce_action'], (string) $config['publish_nonce_field']); ?>
-                <?php submit_button(__('Publicar datos', 'cannes-festival-medal-tracker'), 'primary', 'submit', false); ?>
+                <?php submit_button(__('Publicar datos pendientes', 'cannes-festival-medal-tracker'), 'primary', 'submit', false); ?>
             </form>
         </div>
         <?php
@@ -104,60 +109,6 @@ final class FrontendAdminRenderer
                 <strong><?php echo esc_html__('Cambios pendientes', 'cannes-festival-medal-tracker'); ?></strong>
                 <span><?php echo esc_html((string) count($state['pending_changes'] ?? [])); ?></span>
             </div>
-        </div>
-        <?php
-    }
-
-    private function renderPreviewWidget(array $state): void
-    {
-        $publishedRows = is_array($state['published_rows'] ?? null) ? $state['published_rows'] : [];
-        $pendingChanges = is_array($state['pending_changes'] ?? null) ? $state['pending_changes'] : [];
-        $liveRows = is_array($state['live_rows'] ?? null) ? $state['live_rows'] : [];
-        ?>
-        <div class="fmb-frontend-preview-widget">
-            <h2><?php echo esc_html__('Vista previa del frontend', 'cannes-festival-medal-tracker'); ?></h2>
-            <details class="fmb-accordion">
-                <summary>
-                    <?php
-                    echo esc_html(
-                        sprintf(
-                            /* translators: %d: published country rows. */
-                            __('Medallero publicado actual: %d paises. Ver detalle.', 'cannes-festival-medal-tracker'),
-                            count($publishedRows)
-                        )
-                    );
-                    ?>
-                </summary>
-                <?php $this->renderMedalTable($publishedRows, __('Todavia no hay datos publicados en el frontend.', 'cannes-festival-medal-tracker')); ?>
-            </details>
-            <details class="fmb-accordion" open>
-                <summary>
-                    <?php
-                    echo esc_html(
-                        sprintf(
-                            /* translators: %d: pending changed country rows. */
-                            __('Cambios pendientes para publicar: %d paises. Ver detalle.', 'cannes-festival-medal-tracker'),
-                            count($pendingChanges)
-                        )
-                    );
-                    ?>
-                </summary>
-                <?php $this->renderDeltaTable($pendingChanges); ?>
-            </details>
-            <details class="fmb-accordion">
-                <summary>
-                    <?php
-                    echo esc_html(
-                        sprintf(
-                            /* translators: %d: live country rows. */
-                            __('Asi quedaria despues de publicar: %d paises. Ver detalle.', 'cannes-festival-medal-tracker'),
-                            count($liveRows)
-                        )
-                    );
-                    ?>
-                </summary>
-                <?php $this->renderMedalTable($liveRows, __('El medallero interno esta vacio.', 'cannes-festival-medal-tracker')); ?>
-            </details>
         </div>
         <?php
     }
@@ -220,11 +171,11 @@ final class FrontendAdminRenderer
                 <?php foreach ($rows as $row) : ?>
                     <tr>
                         <td><?php echo esc_html((string) ($row['country'] ?? '')); ?></td>
-                        <td><?php echo esc_html($this->signedNumber((int) ($row['gp'] ?? 0))); ?></td>
-                        <td><?php echo esc_html($this->signedNumber((int) ($row['gold'] ?? 0))); ?></td>
-                        <td><?php echo esc_html($this->signedNumber((int) ($row['silver'] ?? 0))); ?></td>
-                        <td><?php echo esc_html($this->signedNumber((int) ($row['bronze'] ?? 0))); ?></td>
-                        <td><?php echo esc_html($this->signedNumber((int) ($row['total'] ?? 0))); ?></td>
+                        <?php $this->renderDeltaCell((int) ($row['gp'] ?? 0)); ?>
+                        <?php $this->renderDeltaCell((int) ($row['gold'] ?? 0)); ?>
+                        <?php $this->renderDeltaCell((int) ($row['silver'] ?? 0)); ?>
+                        <?php $this->renderDeltaCell((int) ($row['bronze'] ?? 0)); ?>
+                        <?php $this->renderDeltaCell((int) ($row['total'] ?? 0)); ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -239,5 +190,13 @@ final class FrontendAdminRenderer
         }
 
         return (string) $value;
+    }
+
+    private function renderDeltaCell(int $value): void
+    {
+        $class = $value > 0 ? 'fmb-delta-positive' : '';
+        ?>
+        <td class="<?php echo esc_attr($class); ?>"><?php echo esc_html($this->signedNumber($value)); ?></td>
+        <?php
     }
 }

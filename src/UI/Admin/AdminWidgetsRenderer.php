@@ -14,9 +14,12 @@ final class AdminWidgetsRenderer
 {
     private ImportMedalsUseCase $importer;
 
+    private AdminShortcodePreviewRenderer $shortcodes;
+
     public function __construct(ImportMedalsUseCase $importer)
     {
         $this->importer = $importer;
+        $this->shortcodes = new AdminShortcodePreviewRenderer();
     }
 
     public function renderUploadForm(array $config): void
@@ -59,20 +62,11 @@ final class AdminWidgetsRenderer
         <?php
     }
 
-    public function renderShortcodePreviews(): void
+    public function renderShortcodePreviews(array $rows): void
     {
         ?>
-        <h2><?php echo esc_html__('Vista previa de shortcodes', 'cannes-festival-medal-tracker'); ?></h2>
-        <div class="fmb-shortcode-previews">
-            <h3><?php echo esc_html('[medalByCountry]'); ?></h3>
-            <?php echo do_shortcode('[medalByCountry]'); ?>
-
-            <h3><?php echo esc_html('[medalsTotal]'); ?></h3>
-            <?php echo do_shortcode('[medalsTotal]'); ?>
-
-            <h3><?php echo esc_html('[medalByCountryDetail]'); ?></h3>
-            <?php echo do_shortcode('[medalByCountryDetail]'); ?>
-        </div>
+        <h2><?php echo esc_html__('Shortcodes actuales', 'cannes-festival-medal-tracker'); ?></h2>
+        <?php $this->shortcodes->render($rows); ?>
         <?php
     }
 

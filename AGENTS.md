@@ -72,10 +72,15 @@ The pending preview must use collapsible accordions:
 
 - A processed-row accordion with totals in the header and row-level details inside. Counted/processed rows should be visually highlighted in green and bold.
 - A detected-medals accordion showing the country medal totals and whether approval will create or update each country.
+- An accumulated-medals accordion showing how the internal medal table will look after approving the pending import.
+- A shortcode preview block directly below the accumulated medal table, showing how each shortcode would render with the pending import applied.
 
 When one `location` cell contains multiple country values separated by `/`, the row detail must state which allowed countries were counted and which countries were ignored. Example: `Spain / Brazil / Argentina` should count Argentina and ignore Spain and Brazil.
 
 Imports are two-step by design: preview first, then approve and merge. Do not write imported medal totals to the database during upload processing. A pending preview can be discarded without touching persisted medal data.
+
+On the main import/admin page, shortcode previews must stay in context. Do not render a standalone shortcode preview between upload and current data. Show current shortcode previews below the current medal table, and show pending-import shortcode previews inside the pending preview widget below the accumulated medal table.
+The pending preview widget itself must be collapsible/minimizable. Use a distinct orange header for the parent pending-preview accordion, and use yellow headers for the possible/future shortcode accordions inside it, so users can distinguish pending changes from already-applied data.
 
 The admin page must show a **Registro de importaciones** for approved imports. The register must clearly distinguish a pending preview from approved imports: pending files are marked as not merged/not saved yet, while the approved history is collapsible and lists only active approved imports from the import tables. Discarded previews must not be added to this history. Approved imports with stored deltas must expose a **Deshacer** action while they are still approved. Once an import is undone, remove it from the visible register and from duplicate-file detection so users do not see stale evidence that it was imported before. Ignore legacy `wp_options` import history; old test data does not need to be migrated or shown.
 

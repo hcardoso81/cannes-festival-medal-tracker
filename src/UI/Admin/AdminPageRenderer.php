@@ -37,10 +37,10 @@ final class AdminPageRenderer
 
             <?php $this->importWorkflow->renderPendingPreview($preview, $config); ?>
 
-            <?php $this->widgets->renderShortcodePreviews(); ?>
-
             <h2><?php echo esc_html__('Medallero actual', 'cannes-festival-medal-tracker'); ?></h2>
             <?php $this->widgets->renderCurrentTable($rows); ?>
+
+            <?php $this->widgets->renderShortcodePreviews($rows); ?>
 
             <?php $this->importWorkflow->renderImportLog($importLog, $preview, $config); ?>
 

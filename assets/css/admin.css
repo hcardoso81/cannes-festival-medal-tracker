@@ -134,9 +134,8 @@
 .fmb-import-preview {
     max-width: 1040px;
     margin: 1rem 0 2rem;
-    padding: 1rem;
     background: #fff;
-    border: 1px solid #72aee6;
+    border: 1px solid #d97706;
     border-left-width: 4px;
 }
 
@@ -144,8 +143,28 @@
     border-color: #d63638;
 }
 
-.fmb-import-preview h2 {
-    margin-top: 0;
+.fmb-import-preview > summary {
+    padding: 0.85rem 1rem;
+    color: #1d2327;
+    background: #fed7aa;
+    border-left: 4px solid #d97706;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.fmb-import-preview[open] > summary {
+    background: #fdba74;
+    border-bottom: 1px solid #fb923c;
+}
+
+.fmb-import-preview--empty > summary {
+    background: #fcf0f1;
+    border-left-color: #d63638;
+}
+
+.fmb-import-preview__body {
+    padding: 1rem;
 }
 
 .fmb-zero-results-notice p {
@@ -189,6 +208,24 @@
 
 .fmb-import-log form {
     margin: 0;
+}
+
+.fmb-preview-shortcodes {
+    margin-top: 1rem;
+}
+
+.fmb-preview-shortcodes h3 {
+    margin: 0 0 0.75rem;
+}
+
+.fmb-preview-shortcodes .fmb-accordion summary {
+    background: #fff8c5;
+    border-left-color: #dba617;
+}
+
+.fmb-preview-shortcodes .fmb-accordion[open] summary {
+    background: #ffef8a;
+    border-bottom-color: #e0b400;
 }
 
 .fmb-danger-zone {
@@ -259,17 +296,9 @@
     font-weight: 600;
 }
 
-.fmb-frontend-preview-widget {
-    max-width: 1040px;
-    margin: 1rem 0 2rem;
-    padding: 1rem;
-    background: #fff;
-    border: 1px solid #72aee6;
-    border-left-width: 4px;
-}
-
-.fmb-frontend-preview-widget h2 {
-    margin-top: 0;
+.fmb-delta-table .fmb-delta-positive {
+    color: #008a20;
+    font-weight: 700;
 }
 
 @media (max-width: 782px) {
