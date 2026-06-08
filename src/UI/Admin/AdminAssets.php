@@ -16,11 +16,14 @@ final class AdminAssets
             return;
         }
 
+        $adminCssPath = FMB_PATH . 'assets/css/admin.css';
+        $adminCssVersion = file_exists($adminCssPath) ? (string) filemtime($adminCssPath) : FMB_VERSION;
+
         wp_enqueue_style(
             'fmb-admin',
             FMB_URL . 'assets/css/admin.css',
             [],
-            FMB_VERSION
+            $adminCssVersion
         );
 
         wp_register_script('fmb-admin-upload', '', [], FMB_VERSION, true);

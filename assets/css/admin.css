@@ -15,31 +15,34 @@
     margin: 0.75rem 0 1rem;
 }
 
-.fmb-accordion {
+.fmb-admin-page .fmb-accordion {
+    width: 100%;
+    box-sizing: border-box;
     margin: 0.75rem 0;
     background: #fff;
-    border: 1px solid #c3c4c7;
+    border: 1px solid #dba617;
 }
 
-.fmb-accordion summary {
+.fmb-admin-page .fmb-accordion summary {
     padding: 0.75rem 1rem;
-    background: #f0f6fc;
-    border-left: 4px solid #2271b1;
+    color: #1d2327;
+    background: #fff8c5;
+    border-left: 4px solid #dba617;
     font-weight: 600;
     cursor: pointer;
 }
 
-.fmb-accordion[open] summary {
-    background: #e5f0fa;
-    border-bottom: 1px solid #b8d7f0;
+.fmb-admin-page .fmb-accordion[open] summary {
+    background: #ffef8a;
+    border-bottom: 1px solid #e0b400;
 }
 
-.fmb-accordion table {
+.fmb-admin-page .fmb-accordion table {
     margin: 0;
     border: 0;
 }
 
-.fmb-accordion > p {
+.fmb-admin-page .fmb-accordion > p {
     margin: 0.75rem 1rem 1rem;
 }
 
@@ -127,7 +130,8 @@
 }
 
 .fmb-shortcode-previews {
-    max-width: 980px;
+    width: 100%;
+    max-width: none;
     margin: 1rem 0 2rem;
 }
 
@@ -136,7 +140,9 @@
 }
 
 .fmb-import-preview {
-    max-width: 1040px;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
     margin: 1rem 0 2rem;
     background: #fff;
     border: 1px solid #d97706;
@@ -147,7 +153,8 @@
     border-color: #d63638;
 }
 
-.fmb-import-preview > summary {
+.fmb-admin-page .fmb-import-preview > summary,
+.fmb-admin-page .fmb-frontend-publication-preview > summary {
     padding: 0.85rem 1rem;
     color: #1d2327;
     background: #fed7aa;
@@ -157,7 +164,8 @@
     cursor: pointer;
 }
 
-.fmb-import-preview[open] > summary {
+.fmb-admin-page .fmb-import-preview[open] > summary,
+.fmb-admin-page .fmb-frontend-publication-preview[open] > summary {
     background: #fdba74;
     border-bottom: 1px solid #fb923c;
 }
@@ -222,14 +230,47 @@
     margin: 0 0 0.75rem;
 }
 
-.fmb-preview-shortcodes .fmb-accordion summary {
-    background: #fff8c5;
+.fmb-frontend-publication-preview {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    margin: 2.25rem 0 2rem;
+    background: #fff;
+    border: 1px solid #d97706;
+    border-left-width: 4px;
+}
+
+.fmb-frontend-publication-preview > summary {
+    padding: 1rem 1.15rem;
+    font-size: 1.12rem;
+}
+
+.fmb-frontend-publication-preview__body {
+    padding: 1.15rem 1rem 1rem 1.75rem;
+}
+
+.fmb-publication-change-box {
+    margin: 0 0 1rem;
+    padding: 0.85rem 1rem;
+    background: #f6f7f7;
+    border: 1px solid #c3c4c7;
+    border-left: 6px solid #646970;
+}
+
+.fmb-publication-change-box--has-changes {
+    background: #fcf9e8;
+    border-color: #dba617;
     border-left-color: #dba617;
 }
 
-.fmb-preview-shortcodes .fmb-accordion[open] summary {
-    background: #ffef8a;
-    border-bottom-color: #e0b400;
+.fmb-publication-change-box strong,
+.fmb-publication-change-box span {
+    display: block;
+}
+
+.fmb-publication-change-box strong {
+    margin-bottom: 0.25rem;
+    font-size: 1.02rem;
 }
 
 .fmb-danger-zone {
@@ -250,12 +291,15 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
     gap: 0.75rem 1rem;
-    max-width: 1040px;
+    width: 100%;
+    max-width: none;
     margin: 1rem 0;
     padding: 1rem;
     background: #fff;
     border: 1px solid #c3c4c7;
+    box-sizing: border-box;
 }
 
 .fmb-frontend-controls form {
@@ -264,6 +308,15 @@
     align-items: center;
     gap: 0.75rem;
     margin: 0;
+}
+
+.fmb-frontend-controls form:first-child {
+    flex: 1 1 360px;
+}
+
+.fmb-frontend-controls form:last-child {
+    flex: 1 1 260px;
+    justify-content: flex-end;
 }
 
 .fmb-toggle-row {
@@ -321,6 +374,16 @@
 @media (max-width: 782px) {
     .fmb-frontend-summary {
         grid-template-columns: 1fr;
+    }
+
+    .fmb-frontend-controls {
+        align-items: stretch;
+    }
+
+    .fmb-frontend-controls form,
+    .fmb-frontend-controls form:last-child {
+        flex-basis: 100%;
+        justify-content: flex-start;
     }
 }
 

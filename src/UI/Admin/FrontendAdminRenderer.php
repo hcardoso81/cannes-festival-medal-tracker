@@ -12,9 +12,12 @@ final class FrontendAdminRenderer
 {
     private AdminTabsRenderer $tabs;
 
+    private AdminShortcodePreviewRenderer $shortcodes;
+
     public function __construct()
     {
         $this->tabs = new AdminTabsRenderer();
+        $this->shortcodes = new AdminShortcodePreviewRenderer();
     }
 
     public function render(array $state, array $notice, array $config): void
@@ -28,10 +31,7 @@ final class FrontendAdminRenderer
             <?php $this->renderSnapshotSummary($state); ?>
             <h2><?php echo esc_html__('Medallero publicado actual', 'cannes-festival-medal-tracker'); ?></h2>
             <?php $this->renderMedalTable($state['published_rows'] ?? [], __('Todavia no hay datos publicados en el frontend.', 'cannes-festival-medal-tracker')); ?>
-            <h2><?php echo esc_html__('Cambios pendientes para publicar', 'cannes-festival-medal-tracker'); ?></h2>
-            <?php $this->renderDeltaTable($state['pending_changes'] ?? []); ?>
-            <h2><?php echo esc_html__('Asi quedaria despues de publicar', 'cannes-festival-medal-tracker'); ?></h2>
-            <?php $this->renderMedalTable($state['live_rows'] ?? [], __('El medallero interno esta vacio.', 'cannes-festival-medal-tracker')); ?>
+            <?php $this->renderPublicationPreview($state); ?>
         </div>
         <?php
     }
@@ -138,6 +138,78 @@ final class FrontendAdminRenderer
                 <li><?php echo esc_html($file); ?></li>
             <?php endforeach; ?>
         </ul>
+        <?php
+    }
+
+    private function renderPublicationPreview(array $state): void
+    {
+        $changes = is_array($state['pending_changes'] ?? null) ? $state['pending_changes'] : [];
+        $liveRows = is_array($state['live_rows'] ?? null) ? $state['live_rows'] : [];
+        $hasChanges = !empty($changes);
+        ?>
+        <details class="fmb-frontend-publication-preview">
+            <summary>
+                <?php echo esc_html__('Vista previa de publicacion del frontend', 'cannes-festival-medal-tracker'); ?>
+            </summary>
+            <div class="fmb-frontend-publication-preview__body">
+                <div class="<?php echo esc_attr($hasChanges ? 'fmb-publication-change-box fmb-publication-change-box--has-changes' : 'fmb-publication-change-box'); ?>">
+                    <strong>
+                        <?php
+                        echo esc_html(
+                            $hasChanges
+                                ? __('Hay cambios pendientes para publicar', 'cannes-festival-medal-tracker')
+                                : __('No hay cambios pendientes para publicar', 'cannes-festival-medal-tracker')
+                        );
+                        ?>
+                    </strong>
+                    <span>
+                        <?php
+                        echo esc_html(
+                            $hasChanges
+                                ? sprintf(
+                                    /* translators: %d: countries with pending publication changes. */
+                                    __('La publicacion actualizaria %d paises del medallero visible en el frontend.', 'cannes-festival-medal-tracker'),
+                                    count($changes)
+                                )
+                                : __('El medallero publicado ya coincide con el medallero interno.', 'cannes-festival-medal-tracker')
+                        );
+                        ?>
+                    </span>
+                </div>
+                <details class="fmb-accordion">
+                    <summary>
+                        <?php
+                        echo esc_html(
+                            sprintf(
+                                /* translators: %d: countries with pending publication changes. */
+                                __('Cambios pendientes para publicar: %d paises. Ver detalle.', 'cannes-festival-medal-tracker'),
+                                count($changes)
+                            )
+                        );
+                        ?>
+                    </summary>
+                    <?php $this->renderDeltaTable($changes); ?>
+                </details>
+                <details class="fmb-accordion">
+                    <summary>
+                        <?php
+                        echo esc_html(
+                            sprintf(
+                                /* translators: %d: countries in the medal table after publishing. */
+                                __('Asi quedaria despues de publicar: %d paises. Ver detalle.', 'cannes-festival-medal-tracker'),
+                                count($liveRows)
+                            )
+                        );
+                        ?>
+                    </summary>
+                    <?php $this->renderMedalTable($liveRows, __('El medallero interno esta vacio.', 'cannes-festival-medal-tracker')); ?>
+                </details>
+                <div class="fmb-preview-shortcodes">
+                    <h3><?php echo esc_html__('Shortcodes despues de publicar', 'cannes-festival-medal-tracker'); ?></h3>
+                    <?php $this->shortcodes->render($liveRows); ?>
+                </div>
+            </div>
+        </details>
         <?php
     }
 
