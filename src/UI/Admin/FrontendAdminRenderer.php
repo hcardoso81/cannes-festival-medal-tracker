@@ -146,6 +146,7 @@ final class FrontendAdminRenderer
         $changes = is_array($state['pending_changes'] ?? null) ? $state['pending_changes'] : [];
         $liveRows = is_array($state['live_rows'] ?? null) ? $state['live_rows'] : [];
         $hasChanges = !empty($changes);
+        $previewRows = $hasChanges ? $liveRows : [];
         ?>
         <details class="fmb-frontend-publication-preview">
             <summary>
@@ -197,16 +198,22 @@ final class FrontendAdminRenderer
                             sprintf(
                                 /* translators: %d: countries in the medal table after publishing. */
                                 __('Asi quedaria despues de publicar: %d paises. Ver detalle.', 'cannes-festival-medal-tracker'),
-                                count($liveRows)
+                                count($previewRows)
                             )
                         );
                         ?>
                     </summary>
-                    <?php $this->renderMedalTable($liveRows, __('El medallero interno esta vacio.', 'cannes-festival-medal-tracker')); ?>
+                    <?php $this->renderMedalTable($previewRows, __('No hay cambios pendientes para previsualizar despues de publicar.', 'cannes-festival-medal-tracker')); ?>
                 </details>
                 <div class="fmb-preview-shortcodes">
                     <h3><?php echo esc_html__('Shortcodes despues de publicar', 'cannes-festival-medal-tracker'); ?></h3>
-                    <?php $this->shortcodes->render($liveRows); ?>
+                    <?php
+                    if ($hasChanges) {
+                        $this->shortcodes->render($liveRows);
+                    } else {
+                        echo '<p>' . esc_html__('No hay cambios pendientes para previsualizar en los shortcodes.', 'cannes-festival-medal-tracker') . '</p>';
+                    }
+                    ?>
                 </div>
             </div>
         </details>
