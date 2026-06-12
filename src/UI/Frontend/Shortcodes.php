@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FestivalMedalTracker\UI\Frontend;
 
 use FestivalMedalTracker\Infrastructure\Persistence\FrontendPublicationRepository;
+use FestivalMedalTracker\UI\MedalIconRenderer;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -48,7 +49,7 @@ final class Shortcodes
             <thead>
                 <tr>
                     <th scope="col"></th>
-                    <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -86,24 +87,24 @@ final class Shortcodes
             <thead>
                 <tr>
                     <th scope="col"></th>
-                    <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="row"><?php echo MedalIconRenderer::render('gp'); ?></th>
                     <td><?php echo esc_html($this->formatMedalValue($totals['gp'])); ?></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="row"><?php echo MedalIconRenderer::render('gold'); ?></th>
                     <td><?php echo esc_html($this->formatMedalValue($totals['gold'])); ?></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="row"><?php echo MedalIconRenderer::render('silver'); ?></th>
                     <td><?php echo esc_html($this->formatMedalValue($totals['silver'])); ?></td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="row"><?php echo MedalIconRenderer::render('bronze'); ?></th>
                     <td><?php echo esc_html($this->formatMedalValue($totals['bronze'])); ?></td>
                 </tr>
             </tbody>
@@ -132,11 +133,11 @@ final class Shortcodes
             <thead>
                 <tr>
                     <th scope="col"></th>
-                    <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
-                    <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo MedalIconRenderer::render('gp'); ?></th>
+                    <th scope="col"><?php echo MedalIconRenderer::render('gold'); ?></th>
+                    <th scope="col"><?php echo MedalIconRenderer::render('silver'); ?></th>
+                    <th scope="col"><?php echo MedalIconRenderer::render('bronze'); ?></th>
+                    <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
                 </tr>
             </thead>
             <tbody>
