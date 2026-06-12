@@ -164,11 +164,14 @@ final class Shortcodes
             return;
         }
 
+        $frontendCssPath = FMB_PATH . 'assets/css/frontend.css';
+        $frontendCssVersion = file_exists($frontendCssPath) ? (string) filemtime($frontendCssPath) : FMB_VERSION;
+
         wp_enqueue_style(
             'fmb-frontend',
             FMB_URL . 'assets/css/frontend.css',
             [],
-            FMB_VERSION
+            $frontendCssVersion
         );
     }
 

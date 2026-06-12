@@ -29,8 +29,17 @@ final class MedalIconRenderer
         return sprintf(
             '<img class="fmb-medal-icon fmb-medal-icon--%1$s" src="%2$s" alt="%3$s" title="%3$s">',
             esc_attr($medal),
-            esc_url(FMB_URL . 'assets/images/medals/' . $icon['file']),
+            esc_url(self::iconUrl($icon['file'])),
             esc_attr((string) $icon['label'])
         );
+    }
+
+    private static function iconUrl(string $file): string
+    {
+        $relativePath = 'assets/images/medals/' . $file;
+        $absolutePath = FMB_PATH . $relativePath;
+        $version      = file_exists($absolutePath) ? (string) filemtime($absolutePath) : FMB_VERSION;
+
+        return add_query_arg('ver', $version, FMB_URL . $relativePath);
     }
 }
