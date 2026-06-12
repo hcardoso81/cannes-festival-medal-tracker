@@ -48,7 +48,7 @@ final class Shortcodes
             <thead>
                 <tr>
                     <th scope="col"></th>
-                    <th scope="col"><?php echo esc_html__('Total de medallas', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -85,7 +85,7 @@ final class Shortcodes
         <table class="fmb-table fmb-table-medal-total">
             <thead>
                 <tr>
-                    <th scope="col"><?php echo esc_html__('Tipo de medalla', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
