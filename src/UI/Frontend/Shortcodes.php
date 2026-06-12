@@ -47,7 +47,7 @@ final class Shortcodes
         <table class="fmb-table fmb-table-country-total">
             <thead>
                 <tr>
-                    <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"></th>
                     <th scope="col"><?php echo esc_html__('Total de medallas', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -62,7 +62,7 @@ final class Shortcodes
         </table>
         <?php
 
-        return (string) ob_get_clean();
+        return $this->wrapShortcode((string) ob_get_clean());
     }
 
     public function renderMedalsTotal(): string
@@ -110,7 +110,7 @@ final class Shortcodes
         </table>
         <?php
 
-        return (string) ob_get_clean();
+        return $this->wrapShortcode((string) ob_get_clean());
     }
 
     public function renderMedalByCountryDetail(): string
@@ -131,7 +131,7 @@ final class Shortcodes
         <table class="fmb-table fmb-table-country-detail">
             <thead>
                 <tr>
-                    <th scope="col"><?php echo esc_html__('Pais', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"></th>
                     <th scope="col"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
@@ -154,7 +154,7 @@ final class Shortcodes
         </table>
         <?php
 
-        return (string) ob_get_clean();
+        return $this->wrapShortcode((string) ob_get_clean());
     }
 
     private function enqueueAssets(): void
@@ -171,12 +171,27 @@ final class Shortcodes
         );
     }
 
+    private function wrapShortcode(string $content): string
+    {
+        ob_start();
+        ?>
+        <div class="fmb-shortcode">
+            <div class="block-head block-head-d is-left term-color-1205">
+                <h4 class="heading"><?php echo esc_html__('Medallero Cannes', 'cannes-festival-medal-tracker'); ?></h4>
+            </div>
+            <?php echo $content; ?>
+        </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
     private function emptyMessage(): string
     {
         if (!$this->publication->isEnabled()) {
             return '';
         }
 
-        return '<p class="fmb-empty">' . esc_html__('Todavia no se importaron medallas.', 'cannes-festival-medal-tracker') . '</p>';
+        return $this->wrapShortcode('<p class="fmb-empty">' . esc_html__('Todavia no se importaron medallas.', 'cannes-festival-medal-tracker') . '</p>');
     }
 }

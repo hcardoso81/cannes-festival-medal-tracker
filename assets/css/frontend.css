@@ -1,27 +1,65 @@
-.fmb-table {
-    width: 100%;
-    border-collapse: collapse;
+.fmb-shortcode {
+    color: #777;
+    font-family: inherit;
     margin: 1.5rem 0;
+}
+
+.fmb-shortcode .block-head.block-head-d {
+    border-bottom: 2px solid #5a4387;
+    margin: 0 0 1rem;
+    min-height: 34px;
+}
+
+.fmb-shortcode .block-head .heading {
+    background: #5a4387;
+    color: #fff;
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+    padding: 0.8rem 1rem;
+    text-transform: uppercase;
+}
+
+.fmb-table {
+    background: #fff;
+    border: 0;
+    border-collapse: collapse;
+    color: #777;
     font-size: 1rem;
+    margin: 0;
+    width: 100%;
 }
 
 .fmb-table th,
 .fmb-table td {
-    border: 1px solid #d8dde3;
-    padding: 0.75rem;
+    background: #fff;
+    border: 0;
+    border-bottom: 1px solid #d2d2d2;
+    color: #777;
+    font-weight: 400;
+    padding: 0.65rem 0.75rem;
     text-align: left;
 }
 
 .fmb-table thead th {
-    background: #f4f6f8;
-    color: #1d2327;
-    font-weight: 700;
+    background: #fff;
+    color: #777;
+    font-weight: 400;
+    text-transform: uppercase;
 }
 
-.fmb-table tbody tr:nth-child(even) {
-    background: #fafafa;
+.fmb-table tbody tr {
+    background: #fff;
+}
+
+.fmb-table tbody th {
+    text-transform: uppercase;
 }
 
 .fmb-empty {
+    color: #777;
+    margin: 0;
     padding: 0.75rem 0;
 }
