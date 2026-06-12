@@ -59,14 +59,10 @@
 .fmb-medal-icon {
     display: inline-block;
     width: auto;
-    max-width: 56px;
     height: 28px;
+    max-width: none;
     object-fit: contain;
     vertical-align: middle;
-}
-
-.fmb-medal-icon--total {
-    max-width: 112px;
 }
 
 .fmb-table tbody tr {
