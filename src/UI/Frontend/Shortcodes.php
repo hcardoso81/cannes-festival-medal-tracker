@@ -55,7 +55,7 @@ final class Shortcodes
                 <?php foreach ($rows as $row) : ?>
                     <tr>
                         <th scope="row"><?php echo esc_html((string) $row['country']); ?></th>
-                        <td><?php echo esc_html((string) absint($row['total'])); ?></td>
+                        <td><?php echo esc_html($this->formatMedalValue($row['total'])); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -92,19 +92,19 @@ final class Shortcodes
             <tbody>
                 <tr>
                     <th scope="row"><?php echo esc_html__('GP', 'cannes-festival-medal-tracker'); ?></th>
-                    <td><?php echo esc_html((string) absint($totals['gp'])); ?></td>
+                    <td><?php echo esc_html($this->formatMedalValue($totals['gp'])); ?></td>
                 </tr>
                 <tr>
                     <th scope="row"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
-                    <td><?php echo esc_html((string) absint($totals['gold'])); ?></td>
+                    <td><?php echo esc_html($this->formatMedalValue($totals['gold'])); ?></td>
                 </tr>
                 <tr>
                     <th scope="row"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
-                    <td><?php echo esc_html((string) absint($totals['silver'])); ?></td>
+                    <td><?php echo esc_html($this->formatMedalValue($totals['silver'])); ?></td>
                 </tr>
                 <tr>
                     <th scope="row"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
-                    <td><?php echo esc_html((string) absint($totals['bronze'])); ?></td>
+                    <td><?php echo esc_html($this->formatMedalValue($totals['bronze'])); ?></td>
                 </tr>
             </tbody>
         </table>
@@ -143,11 +143,11 @@ final class Shortcodes
                 <?php foreach ($rows as $row) : ?>
                     <tr>
                         <th scope="row"><?php echo esc_html((string) $row['country']); ?></th>
-                        <td><?php echo esc_html((string) absint($row['gp'])); ?></td>
-                        <td><?php echo esc_html((string) absint($row['gold'])); ?></td>
-                        <td><?php echo esc_html((string) absint($row['silver'])); ?></td>
-                        <td><?php echo esc_html((string) absint($row['bronze'])); ?></td>
-                        <td><?php echo esc_html((string) absint($row['total'])); ?></td>
+                        <td><?php echo esc_html($this->formatMedalValue($row['gp'])); ?></td>
+                        <td><?php echo esc_html($this->formatMedalValue($row['gold'])); ?></td>
+                        <td><?php echo esc_html($this->formatMedalValue($row['silver'])); ?></td>
+                        <td><?php echo esc_html($this->formatMedalValue($row['bronze'])); ?></td>
+                        <td><?php echo esc_html($this->formatMedalValue($row['total'])); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -184,6 +184,13 @@ final class Shortcodes
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    private function formatMedalValue($value): string
+    {
+        $number = absint($value);
+
+        return 0 === $number ? '' : (string) $number;
     }
 
     private function emptyMessage(): string

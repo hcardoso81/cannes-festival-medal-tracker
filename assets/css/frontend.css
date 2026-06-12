@@ -43,8 +43,14 @@
     text-align: left;
 }
 
+.fmb-table th:not(:first-child),
+.fmb-table td:not(:first-child) {
+    text-align: center;
+}
+
 .fmb-table thead th {
     background: #fff;
+    border-bottom: 0;
     color: #777;
     font-weight: 400;
     text-transform: uppercase;
