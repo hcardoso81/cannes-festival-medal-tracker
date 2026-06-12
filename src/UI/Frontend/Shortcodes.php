@@ -63,7 +63,7 @@ final class Shortcodes
         </table>
         <?php
 
-        return $this->wrapShortcode((string) ob_get_clean());
+        return (string) ob_get_clean();
     }
 
     public function renderMedalsTotal(): string
@@ -111,7 +111,7 @@ final class Shortcodes
         </table>
         <?php
 
-        return $this->wrapShortcode((string) ob_get_clean());
+        return (string) ob_get_clean();
     }
 
     public function renderMedalByCountryDetail(): string
@@ -155,7 +155,7 @@ final class Shortcodes
         </table>
         <?php
 
-        return $this->wrapShortcode((string) ob_get_clean());
+        return (string) ob_get_clean();
     }
 
     private function enqueueAssets(): void
@@ -175,21 +175,6 @@ final class Shortcodes
         );
     }
 
-    private function wrapShortcode(string $content): string
-    {
-        ob_start();
-        ?>
-        <div class="fmb-shortcode">
-            <div class="block-head block-head-d is-left term-color-1205">
-                <h4 class="heading"><?php echo esc_html__('Medallero Cannes', 'cannes-festival-medal-tracker'); ?></h4>
-            </div>
-            <?php echo $content; ?>
-        </div>
-        <?php
-
-        return (string) ob_get_clean();
-    }
-
     private function formatMedalValue($value): string
     {
         $number = absint($value);
@@ -203,6 +188,6 @@ final class Shortcodes
             return '';
         }
 
-        return $this->wrapShortcode('<p class="fmb-empty">' . esc_html__('Todavia no se importaron medallas.', 'cannes-festival-medal-tracker') . '</p>');
+        return '<p class="fmb-empty">' . esc_html__('Todavia no se importaron medallas.', 'cannes-festival-medal-tracker') . '</p>';
     }
 }

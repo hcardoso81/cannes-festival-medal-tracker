@@ -1,27 +1,3 @@
-.fmb-shortcode {
-    color: #777;
-    font-family: inherit;
-    margin: 1.5rem 0;
-}
-
-.fmb-shortcode .block-head.block-head-d {
-    border-bottom: 2px solid #5a4387;
-    margin: 0 0 1rem;
-    min-height: 34px;
-}
-
-.fmb-shortcode .block-head .heading {
-    background: #5a4387;
-    color: #fff;
-    display: inline-block;
-    font-size: 0.8rem;
-    font-weight: 700;
-    line-height: 1;
-    margin: 0;
-    padding: 0.8rem 1rem;
-    text-transform: uppercase;
-}
-
 .fmb-table {
     background: #fff;
     border: 0;
