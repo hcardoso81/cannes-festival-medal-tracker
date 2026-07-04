@@ -71,13 +71,14 @@ final class FrontendPublicationRepository
 
     public function getMedalTotals(): array
     {
-        $totals = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0];
+        $totals = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0, 'titanium' => 0];
 
         foreach ($this->getPublishedRows() as $row) {
             $totals['gp'] += absint($row['gp'] ?? 0);
             $totals['gold'] += absint($row['gold'] ?? 0);
             $totals['silver'] += absint($row['silver'] ?? 0);
             $totals['bronze'] += absint($row['bronze'] ?? 0);
+            $totals['titanium'] += absint($row['titanium'] ?? 0);
         }
 
         return $totals;
@@ -100,10 +101,11 @@ final class FrontendPublicationRepository
                 'gold'    => (int) $next['gold'] - (int) $current['gold'],
                 'silver'  => (int) $next['silver'] - (int) $current['silver'],
                 'bronze'  => (int) $next['bronze'] - (int) $current['bronze'],
+                'titanium'  => (int) $next['titanium'] - (int) $current['titanium'],
             ];
-            $delta['total'] = $delta['gp'] + $delta['gold'] + $delta['silver'] + $delta['bronze'];
+            $delta['total'] = $delta['gp'] + $delta['gold'] + $delta['silver'] + $delta['bronze'] + $delta['titanium'];
 
-            if (0 !== $delta['total'] || 0 !== $delta['gp'] || 0 !== $delta['gold'] || 0 !== $delta['silver'] || 0 !== $delta['bronze']) {
+            if (0 !== $delta['total'] || 0 !== $delta['gp'] || 0 !== $delta['gold'] || 0 !== $delta['silver'] || 0 !== $delta['bronze'] || 0 !== $delta['titanium']) {
                 $changes[] = $delta;
             }
         }
@@ -133,13 +135,15 @@ final class FrontendPublicationRepository
             $gold = absint($row['gold'] ?? 0);
             $silver = absint($row['silver'] ?? 0);
             $bronze = absint($row['bronze'] ?? 0);
+            $titanium = absint($row['titanium'] ?? 0);
             $normalized[] = [
                 'country' => $country,
                 'gp'      => $gp,
                 'gold'    => $gold,
                 'silver'  => $silver,
                 'bronze'  => $bronze,
-                'total'   => $gp + $gold + $silver + $bronze,
+                'titanium' => $titanium,
+                'total'   => $gp + $gold + $silver + $bronze + $titanium,
             ];
         }
 
@@ -150,6 +154,7 @@ final class FrontendPublicationRepository
                     ?: (int) $b['gold'] <=> (int) $a['gold']
                     ?: (int) $b['silver'] <=> (int) $a['silver']
                     ?: (int) $b['bronze'] <=> (int) $a['bronze']
+                    ?: (int) $b['titanium'] <=> (int) $a['titanium']
                     ?: (int) $b['total'] <=> (int) $a['total']
                     ?: strcmp((string) $a['country'], (string) $b['country']);
             }
@@ -177,6 +182,7 @@ final class FrontendPublicationRepository
             'gold'    => 0,
             'silver'  => 0,
             'bronze'  => 0,
+            'titanium' => 0,
             'total'   => 0,
         ];
     }

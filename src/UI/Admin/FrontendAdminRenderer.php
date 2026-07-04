@@ -236,6 +236,7 @@ final class FrontendAdminRenderer
                     <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Titanio', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -247,6 +248,7 @@ final class FrontendAdminRenderer
                         <td><?php echo esc_html((string) absint($row['gold'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['silver'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['bronze'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($row['titanium'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['total'] ?? 0)); ?></td>
                     </tr>
                 <?php endforeach; ?>
@@ -271,6 +273,7 @@ final class FrontendAdminRenderer
                     <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Titanio', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -282,6 +285,7 @@ final class FrontendAdminRenderer
                         <?php $this->renderDeltaCell((int) ($row['gold'] ?? 0)); ?>
                         <?php $this->renderDeltaCell((int) ($row['silver'] ?? 0)); ?>
                         <?php $this->renderDeltaCell((int) ($row['bronze'] ?? 0)); ?>
+                        <?php $this->renderDeltaCell((int) ($row['titanium'] ?? 0)); ?>
                         <?php $this->renderDeltaCell((int) ($row['total'] ?? 0)); ?>
                     </tr>
                 <?php endforeach; ?>

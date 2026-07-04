@@ -41,6 +41,12 @@
     vertical-align: middle;
 }
 
+.fmb-medal-icon--titanium {
+    position: relative;
+    top: 1px;
+    height: 25px;
+}
+
 .fmb-table tbody tr {
     background: #fff;
 }

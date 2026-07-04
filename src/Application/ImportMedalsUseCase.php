@@ -101,7 +101,7 @@ final class ImportMedalsUseCase
 
             foreach ($countries as $country) {
                 if (!isset($accumulator[$country])) {
-                    $accumulator[$country] = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0];
+                    $accumulator[$country] = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0, 'titanium' => 0];
                 }
 
                 $accumulator[$country][$medal]++;
@@ -170,7 +170,8 @@ final class ImportMedalsUseCase
                     (int) ($medals['gp'] ?? 0),
                     (int) ($medals['gold'] ?? 0),
                     (int) ($medals['silver'] ?? 0),
-                    (int) ($medals['bronze'] ?? 0)
+                    (int) ($medals['bronze'] ?? 0),
+                    (int) ($medals['titanium'] ?? 0)
                 );
 
                 if ('created' === $result) {
@@ -194,7 +195,8 @@ final class ImportMedalsUseCase
                     (int) ($medals['gp'] ?? 0),
                     (int) ($medals['gold'] ?? 0),
                     (int) ($medals['silver'] ?? 0),
-                    (int) ($medals['bronze'] ?? 0)
+                    (int) ($medals['bronze'] ?? 0),
+                    (int) ($medals['titanium'] ?? 0)
                 );
             }
 
@@ -237,7 +239,8 @@ final class ImportMedalsUseCase
                     (int) ($delta['gp'] ?? 0),
                     (int) ($delta['gold'] ?? 0),
                     (int) ($delta['silver'] ?? 0),
-                    (int) ($delta['bronze'] ?? 0)
+                    (int) ($delta['bronze'] ?? 0),
+                    (int) ($delta['titanium'] ?? 0)
                 );
             }
 
@@ -257,7 +260,8 @@ final class ImportMedalsUseCase
                     + (int) ($delta['gp'] ?? 0)
                     + (int) ($delta['gold'] ?? 0)
                     + (int) ($delta['silver'] ?? 0)
-                    + (int) ($delta['bronze'] ?? 0);
+                    + (int) ($delta['bronze'] ?? 0)
+                    + (int) ($delta['titanium'] ?? 0);
             },
             0
         );

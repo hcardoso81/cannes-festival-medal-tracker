@@ -34,7 +34,7 @@ final class ImportRepository
         return (int) $wpdb->insert_id;
     }
 
-    public function addDelta(int $importId, string $country, int $gp, int $gold, int $silver, int $bronze): void
+    public function addDelta(int $importId, string $country, int $gp, int $gold, int $silver, int $bronze, int $titanium): void
     {
         global $wpdb;
 
@@ -47,8 +47,9 @@ final class ImportRepository
                 'gold'      => max(0, $gold),
                 'silver'    => max(0, $silver),
                 'bronze'    => max(0, $bronze),
+                'titanium'  => max(0, $titanium),
             ],
-            ['%d', '%s', '%d', '%d', '%d', '%d']
+            ['%d', '%s', '%d', '%d', '%d', '%d', '%d']
         );
     }
 
@@ -73,7 +74,7 @@ final class ImportRepository
 
         return $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT country, gp, gold, silver, bronze
+                'SELECT country, gp, gold, silver, bronze, titanium
                 FROM ' . DatabaseInstaller::importDeltasTableName() . '
                 WHERE import_id = %d
                 ORDER BY country ASC',
@@ -96,7 +97,7 @@ final class ImportRepository
                         WHERE d.import_id = i.id
                     ) AS delta_count,
                     (
-                        SELECT COALESCE(SUM(d.gp + d.gold + d.silver + d.bronze), 0)
+                        SELECT COALESCE(SUM(d.gp + d.gold + d.silver + d.bronze + d.titanium), 0)
                         FROM ' . DatabaseInstaller::importDeltasTableName() . ' d
                         WHERE d.import_id = i.id
                     ) AS medal_delta_total

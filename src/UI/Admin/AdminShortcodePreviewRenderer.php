@@ -65,13 +65,14 @@ final class AdminShortcodePreviewRenderer
             return;
         }
 
-        $totals = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0];
+        $totals = ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0, 'titanium' => 0];
 
         foreach ($rows as $row) {
             $totals['gp'] += absint($row['gp'] ?? 0);
             $totals['gold'] += absint($row['gold'] ?? 0);
             $totals['silver'] += absint($row['silver'] ?? 0);
             $totals['bronze'] += absint($row['bronze'] ?? 0);
+            $totals['titanium'] += absint($row['titanium'] ?? 0);
         }
 
         ?>
@@ -83,7 +84,7 @@ final class AdminShortcodePreviewRenderer
                 </tr>
             </thead>
             <tbody>
-                <?php foreach (['gp', 'gold', 'silver', 'bronze'] as $key) : ?>
+                <?php foreach (['gp', 'gold', 'silver', 'bronze', 'titanium'] as $key) : ?>
                     <tr>
                         <th scope="row"><?php echo esc_html($this->medalLabel($key)); ?></th>
                         <td><?php echo esc_html((string) absint($totals[$key])); ?></td>
@@ -111,6 +112,7 @@ final class AdminShortcodePreviewRenderer
                     <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Titanio', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -122,6 +124,7 @@ final class AdminShortcodePreviewRenderer
                         <td><?php echo esc_html((string) absint($row['gold'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['silver'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['bronze'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($row['titanium'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['total'] ?? 0)); ?></td>
                     </tr>
                 <?php endforeach; ?>
@@ -139,6 +142,7 @@ final class AdminShortcodePreviewRenderer
                     ?: absint($b['gold'] ?? 0) <=> absint($a['gold'] ?? 0)
                     ?: absint($b['silver'] ?? 0) <=> absint($a['silver'] ?? 0)
                     ?: absint($b['bronze'] ?? 0) <=> absint($a['bronze'] ?? 0)
+                    ?: absint($b['titanium'] ?? 0) <=> absint($a['titanium'] ?? 0)
                     ?: absint($b['total'] ?? 0) <=> absint($a['total'] ?? 0)
                     ?: strcmp((string) ($a['country'] ?? ''), (string) ($b['country'] ?? ''));
             }
@@ -159,6 +163,7 @@ final class AdminShortcodePreviewRenderer
             'gold'   => __('Oro', 'cannes-festival-medal-tracker'),
             'silver' => __('Plata', 'cannes-festival-medal-tracker'),
             'bronze' => __('Bronce', 'cannes-festival-medal-tracker'),
+            'titanium' => __('Titanio', 'cannes-festival-medal-tracker'),
         ];
 
         return (string) ($labels[$medal] ?? $medal);

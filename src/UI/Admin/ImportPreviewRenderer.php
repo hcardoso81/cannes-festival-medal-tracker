@@ -274,7 +274,7 @@ final class ImportPreviewRenderer
                     <?php
                     $country = (string) ($item['country'] ?? '');
                     $medals  = is_array($item['medals'] ?? null) ? $item['medals'] : [];
-                    $total   = absint($medals['gp'] ?? 0) + absint($medals['gold'] ?? 0) + absint($medals['silver'] ?? 0) + absint($medals['bronze'] ?? 0);
+                    $total   = absint($medals['gp'] ?? 0) + absint($medals['gold'] ?? 0) + absint($medals['silver'] ?? 0) + absint($medals['bronze'] ?? 0) + absint($medals['titanium'] ?? 0);
                     $action  = null === $this->repository->findByCountry($country)
                         ? __('Crear', 'cannes-festival-medal-tracker')
                         : __('Actualizar', 'cannes-festival-medal-tracker');
@@ -285,6 +285,7 @@ final class ImportPreviewRenderer
                         <td><?php echo esc_html((string) absint($medals['gold'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($medals['silver'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($medals['bronze'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($medals['titanium'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) $total); ?></td>
                         <td><?php echo esc_html($action); ?></td>
                     </tr>
@@ -314,6 +315,7 @@ final class ImportPreviewRenderer
                     <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Titanio', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -325,6 +327,7 @@ final class ImportPreviewRenderer
                         <td><?php echo esc_html((string) absint($row['gold'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['silver'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['bronze'] ?? 0)); ?></td>
+                        <td><?php echo esc_html((string) absint($row['titanium'] ?? 0)); ?></td>
                         <td><?php echo esc_html((string) absint($row['total'] ?? 0)); ?></td>
                     </tr>
                 <?php endforeach; ?>
@@ -350,6 +353,7 @@ final class ImportPreviewRenderer
                 'gold'    => absint($row['gold'] ?? 0),
                 'silver'  => absint($row['silver'] ?? 0),
                 'bronze'  => absint($row['bronze'] ?? 0),
+                'titanium' => absint($row['titanium'] ?? 0),
                 'total'   => absint($row['total'] ?? 0),
             ];
         }
@@ -369,6 +373,7 @@ final class ImportPreviewRenderer
                     'gold'    => 0,
                     'silver'  => 0,
                     'bronze'  => 0,
+                    'titanium' => 0,
                     'total'   => 0,
                 ];
             }
@@ -377,10 +382,12 @@ final class ImportPreviewRenderer
             $rows[$country]['gold'] += absint($medals['gold'] ?? 0);
             $rows[$country]['silver'] += absint($medals['silver'] ?? 0);
             $rows[$country]['bronze'] += absint($medals['bronze'] ?? 0);
+            $rows[$country]['titanium'] += absint($medals['titanium'] ?? 0);
             $rows[$country]['total'] = $rows[$country]['gp']
                 + $rows[$country]['gold']
                 + $rows[$country]['silver']
-                + $rows[$country]['bronze'];
+                + $rows[$country]['bronze']
+                + $rows[$country]['titanium'];
         }
 
         $rows = array_values($rows);
@@ -391,6 +398,7 @@ final class ImportPreviewRenderer
                     ?: absint($b['gold'] ?? 0) <=> absint($a['gold'] ?? 0)
                     ?: absint($b['silver'] ?? 0) <=> absint($a['silver'] ?? 0)
                     ?: absint($b['bronze'] ?? 0) <=> absint($a['bronze'] ?? 0)
+                    ?: absint($b['titanium'] ?? 0) <=> absint($a['titanium'] ?? 0)
                     ?: absint($b['total'] ?? 0) <=> absint($a['total'] ?? 0)
                     ?: strcmp((string) ($a['country'] ?? ''), (string) ($b['country'] ?? ''));
             }

@@ -38,6 +38,7 @@ final class MedalNormalizer
         'gold'   => ['gold lion', 'gold lion campaign', 'gold'],
         'silver' => ['silver lion', 'silver lion campaign', 'silver'],
         'bronze' => ['bronze lion', 'bronze lion campaign', 'bronze'],
+        'titanium' => ['titanium'],
     ];
 
     public function normalizeCountry(string $country): string

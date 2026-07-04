@@ -28,7 +28,7 @@ final class MedalRepository
         return is_array($row) ? $row : null;
     }
 
-    public function upsertAndIncrement(string $country, int $gp, int $gold, int $silver, int $bronze): string
+    public function upsertAndIncrement(string $country, int $gp, int $gold, int $silver, int $bronze, int $titanium): string
     {
         global $wpdb;
 
@@ -44,10 +44,11 @@ final class MedalRepository
                     'gold'       => max(0, $gold),
                     'silver'     => max(0, $silver),
                     'bronze'     => max(0, $bronze),
+                    'titanium'   => max(0, $titanium),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ],
-                ['%s', '%d', '%d', '%d', '%d', '%s', '%s']
+                ['%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s']
             );
 
             return 'created';
@@ -60,12 +61,14 @@ final class MedalRepository
                     gold = gold + %d,
                     silver = silver + %d,
                     bronze = bronze + %d,
+                    titanium = titanium + %d,
                     updated_at = %s
                 WHERE country = %s',
                 max(0, $gp),
                 max(0, $gold),
                 max(0, $silver),
                 max(0, $bronze),
+                max(0, $titanium),
                 $now,
                 $country
             )
@@ -74,7 +77,7 @@ final class MedalRepository
         return 'updated';
     }
 
-    public function decrement(string $country, int $gp, int $gold, int $silver, int $bronze): void
+    public function decrement(string $country, int $gp, int $gold, int $silver, int $bronze, int $titanium): void
     {
         global $wpdb;
 
@@ -85,12 +88,14 @@ final class MedalRepository
                     gold = GREATEST(gold - %d, 0),
                     silver = GREATEST(silver - %d, 0),
                     bronze = GREATEST(bronze - %d, 0),
+                    titanium = GREATEST(titanium - %d, 0),
                     updated_at = %s
                 WHERE country = %s',
                 max(0, $gp),
                 max(0, $gold),
                 max(0, $silver),
                 max(0, $bronze),
+                max(0, $titanium),
                 current_time('mysql'),
                 $country
             )
@@ -98,7 +103,7 @@ final class MedalRepository
 
         $wpdb->query(
             'DELETE FROM ' . DatabaseInstaller::tableName() . '
-            WHERE gp = 0 AND gold = 0 AND silver = 0 AND bronze = 0'
+            WHERE gp = 0 AND gold = 0 AND silver = 0 AND bronze = 0 AND titanium = 0'
         );
     }
 
@@ -109,9 +114,9 @@ final class MedalRepository
         $tableName = DatabaseInstaller::tableName();
 
         return $wpdb->get_results(
-            "SELECT country, (gp + gold + silver + bronze) AS total
+            "SELECT country, (gp + gold + silver + bronze + titanium) AS total
             FROM {$tableName}
-            ORDER BY gp DESC, gold DESC, silver DESC, bronze DESC, total DESC, country ASC",
+            ORDER BY gp DESC, gold DESC, silver DESC, bronze DESC, titanium DESC, total DESC, country ASC",
             ARRAY_A
         ) ?: [];
     }
@@ -126,12 +131,13 @@ final class MedalRepository
                 COALESCE(SUM(gp), 0) AS gp,
                 COALESCE(SUM(gold), 0) AS gold,
                 COALESCE(SUM(silver), 0) AS silver,
-                COALESCE(SUM(bronze), 0) AS bronze
+                COALESCE(SUM(bronze), 0) AS bronze,
+                COALESCE(SUM(titanium), 0) AS titanium
             FROM {$tableName}",
             ARRAY_A
         );
 
-        return is_array($row) ? $row : ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0];
+        return is_array($row) ? $row : ['gp' => 0, 'gold' => 0, 'silver' => 0, 'bronze' => 0, 'titanium' => 0];
     }
 
     public function getCountryDetails(): array
@@ -141,9 +147,9 @@ final class MedalRepository
         $tableName = DatabaseInstaller::tableName();
 
         return $wpdb->get_results(
-            "SELECT country, gp, gold, silver, bronze, (gp + gold + silver + bronze) AS total
+            "SELECT country, gp, gold, silver, bronze, titanium, (gp + gold + silver + bronze + titanium) AS total
             FROM {$tableName}
-            ORDER BY gp DESC, gold DESC, silver DESC, bronze DESC, total DESC, country ASC",
+            ORDER BY gp DESC, gold DESC, silver DESC, bronze DESC, titanium DESC, total DESC, country ASC",
             ARRAY_A
         ) ?: [];
     }

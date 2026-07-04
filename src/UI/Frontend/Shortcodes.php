@@ -107,6 +107,10 @@ final class Shortcodes
                     <th scope="row"><?php echo MedalIconRenderer::render('bronze'); ?></th>
                     <td><?php echo esc_html($this->formatMedalValue($totals['bronze'])); ?></td>
                 </tr>
+                <tr>
+                    <th scope="row"><?php echo MedalIconRenderer::render('titanium'); ?></th>
+                    <td><?php echo esc_html($this->formatMedalValue($totals['titanium'])); ?></td>
+                </tr>
             </tbody>
         </table>
         <?php
@@ -137,6 +141,7 @@ final class Shortcodes
                     <th scope="col"><?php echo MedalIconRenderer::render('gold'); ?></th>
                     <th scope="col"><?php echo MedalIconRenderer::render('silver'); ?></th>
                     <th scope="col"><?php echo MedalIconRenderer::render('bronze'); ?></th>
+                    <th scope="col"><?php echo MedalIconRenderer::render('titanium'); ?></th>
                     <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
                 </tr>
             </thead>
@@ -148,6 +153,7 @@ final class Shortcodes
                         <td><?php echo esc_html($this->formatMedalValue($row['gold'])); ?></td>
                         <td><?php echo esc_html($this->formatMedalValue($row['silver'])); ?></td>
                         <td><?php echo esc_html($this->formatMedalValue($row['bronze'])); ?></td>
+                        <td><?php echo esc_html($this->formatMedalValue($row['titanium'])); ?></td>
                         <td><?php echo esc_html($this->formatMedalValue($row['total'])); ?></td>
                     </tr>
                 <?php endforeach; ?>

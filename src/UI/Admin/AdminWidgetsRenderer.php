@@ -141,7 +141,7 @@ final class AdminWidgetsRenderer
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach (['gp', 'gold', 'silver', 'bronze'] as $medal) : ?>
+                            <?php foreach (['gp', 'gold', 'silver', 'bronze', 'titanium'] as $medal) : ?>
                                 <tr>
                                     <th scope="row"><?php echo esc_html($this->medalLabel($medal)); ?></th>
                                     <td><?php echo esc_html(implode(', ', array_map('strval', $synonyms[$medal] ?? []))); ?></td>
@@ -170,6 +170,7 @@ final class AdminWidgetsRenderer
                     <th scope="col"><?php echo esc_html__('Oro', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Plata', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Bronce', 'cannes-festival-medal-tracker'); ?></th>
+                    <th scope="col"><?php echo esc_html__('Titanio', 'cannes-festival-medal-tracker'); ?></th>
                     <th scope="col"><?php echo esc_html__('Total', 'cannes-festival-medal-tracker'); ?></th>
                 </tr>
             </thead>
@@ -181,6 +182,7 @@ final class AdminWidgetsRenderer
                         <td><?php echo esc_html((string) absint($row['gold'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['silver'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['bronze'])); ?></td>
+                        <td><?php echo esc_html((string) absint($row['titanium'])); ?></td>
                         <td><?php echo esc_html((string) absint($row['total'])); ?></td>
                     </tr>
                 <?php endforeach; ?>
@@ -196,6 +198,7 @@ final class AdminWidgetsRenderer
             'gold'   => __('Oro', 'cannes-festival-medal-tracker'),
             'silver' => __('Plata', 'cannes-festival-medal-tracker'),
             'bronze' => __('Bronce', 'cannes-festival-medal-tracker'),
+            'titanium' => __('Titanio', 'cannes-festival-medal-tracker'),
         ];
 
         return (string) ($labels[$medal] ?? $medal);

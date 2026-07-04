@@ -17,6 +17,7 @@ final class MedalIconRenderer
             'gold'   => ['file' => 'gold.png', 'label' => __('Oro', 'cannes-festival-medal-tracker')],
             'silver' => ['file' => 'silver.png', 'label' => __('Plata', 'cannes-festival-medal-tracker')],
             'bronze' => ['file' => 'bronze.png', 'label' => __('Bronce', 'cannes-festival-medal-tracker')],
+            'titanium' => ['file' => 'titanium.png', 'label' => __('Titanio', 'cannes-festival-medal-tracker')],
             'total'  => ['file' => 'total.png', 'label' => __('Total', 'cannes-festival-medal-tracker')],
         ];
 
