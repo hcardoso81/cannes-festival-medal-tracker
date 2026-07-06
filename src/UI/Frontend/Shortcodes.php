@@ -45,22 +45,24 @@ final class Shortcodes
 
         ob_start();
         ?>
-        <table class="fmb-table fmb-table-country-total">
-            <thead>
-                <tr>
-                    <th scope="col"></th>
-                    <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($rows as $row) : ?>
+        <div class="fmb-table-scroll">
+            <table class="fmb-table fmb-table-country-total">
+                <thead>
                     <tr>
-                        <th scope="row"><?php echo esc_html((string) $row['country']); ?></th>
-                        <td><?php echo esc_html($this->formatMedalValue($row['total'])); ?></td>
+                        <th scope="col"></th>
+                        <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($rows as $row) : ?>
+                        <tr>
+                            <th scope="row"><?php echo esc_html((string) $row['country']); ?></th>
+                            <td><?php echo esc_html($this->formatMedalValue($row['total'])); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
         <?php
 
         return (string) ob_get_clean();
@@ -83,36 +85,38 @@ final class Shortcodes
 
         ob_start();
         ?>
-        <table class="fmb-table fmb-table-medal-total">
-            <thead>
-                <tr>
-                    <th scope="col"></th>
-                    <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th scope="row"><?php echo MedalIconRenderer::render('gp'); ?></th>
-                    <td><?php echo esc_html($this->formatMedalValue($totals['gp'])); ?></td>
-                </tr>
-                <tr>
-                    <th scope="row"><?php echo MedalIconRenderer::render('gold'); ?></th>
-                    <td><?php echo esc_html($this->formatMedalValue($totals['gold'])); ?></td>
-                </tr>
-                <tr>
-                    <th scope="row"><?php echo MedalIconRenderer::render('silver'); ?></th>
-                    <td><?php echo esc_html($this->formatMedalValue($totals['silver'])); ?></td>
-                </tr>
-                <tr>
-                    <th scope="row"><?php echo MedalIconRenderer::render('bronze'); ?></th>
-                    <td><?php echo esc_html($this->formatMedalValue($totals['bronze'])); ?></td>
-                </tr>
-                <tr>
-                    <th scope="row"><?php echo MedalIconRenderer::render('titanium'); ?></th>
-                    <td><?php echo esc_html($this->formatMedalValue($totals['titanium'])); ?></td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="fmb-table-scroll">
+            <table class="fmb-table fmb-table-medal-total">
+                <thead>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row"><?php echo MedalIconRenderer::render('gp'); ?></th>
+                        <td><?php echo esc_html($this->formatMedalValue($totals['gp'])); ?></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php echo MedalIconRenderer::render('gold'); ?></th>
+                        <td><?php echo esc_html($this->formatMedalValue($totals['gold'])); ?></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php echo MedalIconRenderer::render('silver'); ?></th>
+                        <td><?php echo esc_html($this->formatMedalValue($totals['silver'])); ?></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php echo MedalIconRenderer::render('bronze'); ?></th>
+                        <td><?php echo esc_html($this->formatMedalValue($totals['bronze'])); ?></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php echo MedalIconRenderer::render('titanium'); ?></th>
+                        <td><?php echo esc_html($this->formatMedalValue($totals['titanium'])); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <?php
 
         return (string) ob_get_clean();
@@ -133,32 +137,34 @@ final class Shortcodes
 
         ob_start();
         ?>
-        <table class="fmb-table fmb-table-country-detail">
-            <thead>
-                <tr>
-                    <th scope="col"></th>
-                    <th scope="col"><?php echo MedalIconRenderer::render('gp'); ?></th>
-                    <th scope="col"><?php echo MedalIconRenderer::render('gold'); ?></th>
-                    <th scope="col"><?php echo MedalIconRenderer::render('silver'); ?></th>
-                    <th scope="col"><?php echo MedalIconRenderer::render('bronze'); ?></th>
-                    <th scope="col"><?php echo MedalIconRenderer::render('titanium'); ?></th>
-                    <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($rows as $row) : ?>
+        <div class="fmb-table-scroll">
+            <table class="fmb-table fmb-table-country-detail">
+                <thead>
                     <tr>
-                        <th scope="row"><?php echo esc_html((string) $row['country']); ?></th>
-                        <td><?php echo esc_html($this->formatMedalValue($row['gp'])); ?></td>
-                        <td><?php echo esc_html($this->formatMedalValue($row['gold'])); ?></td>
-                        <td><?php echo esc_html($this->formatMedalValue($row['silver'])); ?></td>
-                        <td><?php echo esc_html($this->formatMedalValue($row['bronze'])); ?></td>
-                        <td><?php echo esc_html($this->formatMedalValue($row['titanium'])); ?></td>
-                        <td><?php echo esc_html($this->formatMedalValue($row['total'])); ?></td>
+                        <th scope="col"></th>
+                        <th scope="col"><?php echo MedalIconRenderer::render('gp'); ?></th>
+                        <th scope="col"><?php echo MedalIconRenderer::render('gold'); ?></th>
+                        <th scope="col"><?php echo MedalIconRenderer::render('silver'); ?></th>
+                        <th scope="col"><?php echo MedalIconRenderer::render('bronze'); ?></th>
+                        <th scope="col"><?php echo MedalIconRenderer::render('titanium'); ?></th>
+                        <th scope="col"><?php echo MedalIconRenderer::render('total'); ?></th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($rows as $row) : ?>
+                        <tr>
+                            <th scope="row"><?php echo esc_html((string) $row['country']); ?></th>
+                            <td><?php echo esc_html($this->formatMedalValue($row['gp'])); ?></td>
+                            <td><?php echo esc_html($this->formatMedalValue($row['gold'])); ?></td>
+                            <td><?php echo esc_html($this->formatMedalValue($row['silver'])); ?></td>
+                            <td><?php echo esc_html($this->formatMedalValue($row['bronze'])); ?></td>
+                            <td><?php echo esc_html($this->formatMedalValue($row['titanium'])); ?></td>
+                            <td><?php echo esc_html($this->formatMedalValue($row['total'])); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
         <?php
 
         return (string) ob_get_clean();

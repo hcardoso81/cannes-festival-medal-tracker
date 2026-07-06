@@ -8,6 +8,12 @@
     width: 100%;
 }
 
+.fmb-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .fmb-table th,
 .fmb-table td {
     background: #fff;
@@ -33,18 +39,19 @@
 }
 
 .fmb-medal-icon {
-    display: inline-block;
-    width: auto;
-    height: 28px;
-    max-width: none;
+    display: inline-block !important;
+    width: auto !important;
+    height: 28px !important;
+    max-width: none !important;
     object-fit: contain;
-    vertical-align: middle;
+    vertical-align: middle !important;
 }
 
 .fmb-medal-icon--titanium {
-    position: relative;
-    top: 1px;
-    height: 25px;
+    position: relative !important;
+    top: 1px !important;
+    height: 25px !important;
+    max-width: 82px !important;
 }
 
 .fmb-table tbody tr {
@@ -59,4 +66,16 @@
     color: #777;
     margin: 0;
     padding: 0.75rem 0;
+}
+
+@media (max-width: 782px) {
+    .fmb-table-scroll {
+        margin-bottom: 0.5rem;
+        overflow-x: scroll;
+        scrollbar-gutter: stable both-edges;
+    }
+
+    .fmb-table-country-detail {
+        min-width: 560px;
+    }
 }
